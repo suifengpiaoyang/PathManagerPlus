@@ -3,13 +3,17 @@ import sys
 import webbrowser
 import subprocess
 
-from PySide2.QtGui import QIcon
+from PySide2.QtGui import (
+    QIcon,
+    QKeySequence
+)
 from PySide2.QtWidgets import (
     QApplication,
     QMainWindow,
     QTreeWidgetItem,
     QListWidgetItem,
-    QMessageBox
+    QMessageBox,
+    QShortcut
 )
 from PySide2.QtCore import Qt
 from ui.main_window import Ui_MainWindow
@@ -48,6 +52,10 @@ class MainWindow(QMainWindow):
         else:
             self.data = DataStorage.from_json(DATABASE)
         self.build_tree()
+
+        # shortcuts
+        shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
+        shortcut.activated.connect(self.save)
 
         # handle slots
         self.ui.treeWidget.itemClicked.connect(self.tree_item_click)
@@ -175,6 +183,7 @@ class MainWindow(QMainWindow):
 
     def save(self):
         self.data.to_json(DATABASE)
+        self.set_has_edited(False)
 
     def closeEvent(self, event):
         # 保存最后关闭时窗口的大小
