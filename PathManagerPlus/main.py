@@ -13,21 +13,18 @@ from PySide2.QtWidgets import (
     QTreeWidgetItem,
     QListWidgetItem,
     QMessageBox,
-    QShortcut
+    QShortcut,
+    QAction,
+    QMenu
 )
 from PySide2.QtCore import Qt
-from ui.main_window import Ui_MainWindow
-from settings import *
-from handle_data import (
+from .ui.main_window import Ui_MainWindow
+from .settings import *
+from .handle_data import (
     gen_base_data,
     DataStorage,
     get_data_format
 )
-
-
-PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
-STATIC_PATH = os.path.join(PROJECT_PATH, 'static')
-DATABASE = os.path.join(PROJECT_PATH, DATABASE)
 
 
 class MainWindow(QMainWindow):
@@ -57,11 +54,19 @@ class MainWindow(QMainWindow):
         shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
         shortcut.activated.connect(self.save)
 
+        # add right click menu
+        self.add_context_menu()
+
         # handle slots
         self.ui.treeWidget.itemClicked.connect(self.tree_item_click)
         self.ui.listWidget.dropMessage.connect(self.drop_add_item)
         self.ui.listWidget.clicked.connect(self.left_click_event)
         self.ui.listWidget.itemDoubleClicked.connect(self.double_click_event)
+
+    def add_context_menu(self):
+        self.ui.listWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.listWidget.customContextMenuRequested.connect(
+            self._show_context_menu)
 
     def build_tree(self):
         self.ui.treeWidget.setHeaderHidden(True)
@@ -139,6 +144,12 @@ class MainWindow(QMainWindow):
             os.startfile(path)
             os.chdir(PROJECT_PATH)
 
+    def open_console_window(self):
+        directory = self._get_selected_directory()
+        if directory:
+            command = f'start /D "{directory}"'
+            os.system(command)
+
     def _check_path_exists(self, path):
         if not os.path.exists(path):
             QMessageBox.critical(self, '错误', f'找不到目标路径：{path}')
@@ -152,6 +163,35 @@ class MainWindow(QMainWindow):
         self.ui.lineEditName.clear()
         self.ui.textEditPath.clear()
         self.ui.textEditComment.clear()
+
+    def _show_context_menu(self, position):
+        """Show context menu and handle slots.
+        """
+        # 右键点击时顺带触发了一次左键选中更新信息。
+        self.left_click_event()
+        open_selected_path = QAction('打开目标路径')
+        open_console_window = QAction('打开console窗口')
+        # open_file_with_sublime = QAction('使用sublime text打开文件')
+        # open_path_with_sublime = QAction('使用sublime text打开文件夹')
+        open_selected_file = QAction('打开目标文件(同双击)')
+
+        # open_selected_path.triggered.connect(self.open_selected_directory)
+        open_console_window.triggered.connect(self.open_console_window)
+        # open_file_with_sublime.triggered.connect(
+        #     lambda: self.open_with_sublime(flag='file'))
+        # open_path_with_sublime.triggered.connect(
+        #     lambda: self.open_with_sublime(flag='path'))
+        open_selected_file.triggered.connect(self.open_selected_file)
+
+        menu = QMenu(self.ui.listWidget)
+        menu.addAction(open_selected_path)
+        menu.addAction(open_console_window)
+        menu.addSeparator()
+        # menu.addAction(open_file_with_sublime)
+        # menu.addAction(open_path_with_sublime)
+        # menu.addSeparator()
+        menu.addAction(open_selected_file)
+        menu.exec_(self.ui.listWidget.mapToGlobal(position))
 
     def drop_add_item(self, urllist):
         node = self.ui.treeWidget.currentItem()
@@ -212,8 +252,13 @@ class MainWindow(QMainWindow):
             event.accept()
 
 
-if __name__ == "__main__":
+def main():
+
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()

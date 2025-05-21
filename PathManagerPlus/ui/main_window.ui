@@ -103,7 +103,7 @@
      <x>0</x>
      <y>0</y>
      <width>642</width>
-     <height>22</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>
@@ -113,7 +113,7 @@
   <customwidget>
    <class>CustomQListWidget</class>
    <extends>QListWidget</extends>
-   <header location="global">custom_widgets.h</header>
+   <header location="global">.custom_widgets.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
