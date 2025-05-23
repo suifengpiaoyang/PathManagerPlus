@@ -2,6 +2,7 @@ import os
 import sys
 import webbrowser
 import subprocess
+import platform
 
 from PySide2.QtGui import (
     QIcon,
@@ -25,6 +26,16 @@ from .handle_data import (
     DataStorage,
     get_data_format
 )
+
+
+system = platform.system()
+
+if system == "Windows":
+    from .actions import windows_actions as system_actions
+elif system == "Linux":
+    from .actions import linux_actions as system_actions
+elif system == "Darwin":
+    raise SysteExit('当前该程序的代码不支持这个系统。')
 
 
 class MainWindow(QMainWindow):
@@ -66,7 +77,7 @@ class MainWindow(QMainWindow):
     def add_context_menu(self):
         self.ui.listWidget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.listWidget.customContextMenuRequested.connect(
-            self._show_context_menu)
+            self.show_context_menu)
 
     def build_tree(self):
         self.ui.treeWidget.setHeaderHidden(True)
@@ -99,7 +110,7 @@ class MainWindow(QMainWindow):
         node_id = item.data(0, Qt.UserRole)
         name = item.text(0)
         self.ui.listWidget.clear()
-        self._clear_input_widgets()
+        self.clear_input_widgets()
         item_ids = self.data['nodes'][node_id]['items']
         for item_id in item_ids:
             item = self.data['items'][item_id]
@@ -108,7 +119,7 @@ class MainWindow(QMainWindow):
             self.ui.listWidget.addItem(item)
 
     def _left_click_event(self, item=None):
-        self._clear_input_widgets()
+        self.clear_input_widgets()
         if item is None:
             item = self.ui.listWidget.currentItem()
         item_id = item.data(Qt.UserRole)
@@ -123,48 +134,70 @@ class MainWindow(QMainWindow):
     def double_click_event(self):
         self.open_selected_file()
 
-    def open_selected_file(self):
+    def get_selected_path(self):
         item = self.ui.listWidget.currentItem()
         item_id = item.data(Qt.UserRole)
         item_data = self.data['items'][item_id]
         path = item_data['path']
+        return path
+
+    def open_selected_file(self):
+        path = self.get_selected_path()
         if not path:
             return
         if path.startswith('http'):
-            webbrowser.open(path)
+            system_actions.open_url(path)
         elif path.startswith(('ftp', r'\\')):
-            subprocess.Popen(['explorer.exe', path])
-        elif self._check_path_exists(path):
-            # 运行时切换到目标路径下。
-            # 曾经出现过目标程序读取配置文件时使用 config.json
-            # 的配置文件，但是却错误地读取到该程序下的配置文件导致
-            # 程序崩溃。添加部分代码来规避这种情况的出现。
-            directory_path = os.path.dirname(path)
-            os.chdir(directory_path)
-            os.startfile(path)
-            os.chdir(PROJECT_PATH)
+            system_actions.open_ftp(path)
+        elif os.path.exists(path):
+            system_actions.open_file(path)
+        else:
+            QMessageBox.critical(self, '错误', f'找不到目标路径：{path}')
+
+    def handle_selected_directory(self, action_type):
+        path = self.get_selected_path()
+        if not path:
+            return
+        if os.path.isdir(path):
+            directory = path
+        else:
+            if not os.path.exists(path):
+                QMessageBox.critical(self, '错误', f'找不到该文件：{path}')
+                return
+            directory = os.path.dirname(path)
+        if directory and os.path.exists(directory):
+            if action_type == 'open_directory':
+                system_actions.open_directory(directory)
+            elif action_type == 'open_console':
+                system_actions.open_console(directory)
+            else:
+                raise TypeError
+        else:
+            QMessageBox.critical(self, '错误', f'找不到目标路径：{path}')
+
+    def open_selected_directory(self):
+        self.handle_selected_directory('open_directory')
 
     def open_console_window(self):
-        directory = self._get_selected_directory()
-        if directory:
-            command = f'start /D "{directory}"'
-            os.system(command)
+        self.handle_selected_directory('open_console')
 
-    def _check_path_exists(self, path):
+    def locate_file(self):
+        path = self.get_selected_path()
+        if not path:
+            return
         if not os.path.exists(path):
-            QMessageBox.critical(self, '错误', f'找不到目标路径：{path}')
-            return False
-        else:
-            return True
+            QMessageBox.critical(self, '错误', f'找不到该文件：{path}')
+            return
+        system_actions.locate_file(path)
 
-    def _clear_input_widgets(self):
+    def clear_input_widgets(self):
         """Clear all input widgets.
         """
         self.ui.lineEditName.clear()
         self.ui.textEditPath.clear()
         self.ui.textEditComment.clear()
 
-    def _show_context_menu(self, position):
+    def show_context_menu(self, position):
         """Show context menu and handle slots.
         """
         # 右键点击时顺带触发了一次左键选中更新信息。
@@ -173,17 +206,20 @@ class MainWindow(QMainWindow):
         open_console_window = QAction('打开console窗口')
         # open_file_with_sublime = QAction('使用sublime text打开文件')
         # open_path_with_sublime = QAction('使用sublime text打开文件夹')
+        locate_file = QAction('定位文件')
         open_selected_file = QAction('打开目标文件(同双击)')
 
-        # open_selected_path.triggered.connect(self.open_selected_directory)
+        open_selected_path.triggered.connect(self.open_selected_directory)
         open_console_window.triggered.connect(self.open_console_window)
         # open_file_with_sublime.triggered.connect(
         #     lambda: self.open_with_sublime(flag='file'))
         # open_path_with_sublime.triggered.connect(
         #     lambda: self.open_with_sublime(flag='path'))
+        locate_file.triggered.connect(self.locate_file)
         open_selected_file.triggered.connect(self.open_selected_file)
 
         menu = QMenu(self.ui.listWidget)
+        menu.addAction(locate_file)
         menu.addAction(open_selected_path)
         menu.addAction(open_console_window)
         menu.addSeparator()
