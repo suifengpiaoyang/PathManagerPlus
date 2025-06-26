@@ -27,6 +27,59 @@ def get_data_format(data_type):
         raise TypeError
 
 
+class JsonDb(dict):
+ 
+    """A json storage with some functions.
+ 
+    Usage:
+ 
+        >>> data = {
+            'Jan': 'January',
+            'Feb': 'February'
+        }
+        >>> months = JsonDb(data)
+        >>> months
+        {"Jan": "January", "Feb": "February"}
+        >>> months.pretty_print()
+        {
+            "Jan": "January",
+            "Feb": "February"
+        }
+        >>> type(months)
+        <class '__main__.JsonDb'>
+        >>> months.to_json('output.json')
+        >>> months2 = JsonDb.from_json('output.json')
+        >>> months2
+        {"Jan": "January", "Feb": "February"}
+        >>> months == months2
+        True
+    """
+ 
+    @classmethod
+    def from_json(cls, file):
+        with open(file, 'r', encoding='utf-8')as fl:
+            return cls(json.load(fl))
+ 
+    @classmethod
+    def from_string(cls, json_str):
+        return cls(json.loads(json_str))
+ 
+    def format_json(self):
+        return json.dumps(self, indent=4, ensure_ascii=False)
+ 
+    def pretty_print(self):
+        print(self.format_json())
+ 
+    def to_json(self, file):
+        with open(file, 'w', encoding='utf-8')as fl:
+            json.dump(self, fl, indent=4, ensure_ascii=False)
+ 
+    def __str__(self):
+        return json.dumps(self, ensure_ascii=False)
+ 
+    __repr__ = __str__
+
+
 class DataStorage(dict):
 
     def __init__(self, data=None):

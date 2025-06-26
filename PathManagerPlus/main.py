@@ -16,15 +16,19 @@ from PySide2.QtWidgets import (
     QMessageBox,
     QShortcut,
     QAction,
-    QMenu
+    QMenu,
+    QWidget,
+    QFileDialog
 )
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, Signal
 from .ui.main_window import Ui_MainWindow
+from .ui.config_form import Ui_ConfigForm
 from .settings import *
 from .handle_data import (
     gen_base_data,
     DataStorage,
-    get_data_format
+    get_data_format,
+    JsonDb
 )
 
 
@@ -36,6 +40,68 @@ elif system == "Linux":
     from .actions import linux_actions as system_actions
 elif system == "Darwin":
     raise SysteExit('当前该程序的代码不支持这个系统。')
+
+
+class ConfigForm(QWidget):
+
+    update_config = Signal()
+
+    def __init__(self):
+        super().__init__()
+        self.ui = Ui_ConfigForm()
+        self.ui.setupUi(self)
+
+        self.has_edited = False
+
+        # set gui icon
+        icon_path = os.path.join(STATIC_PATH, 'folder.ico')
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+
+        # load config file
+        if os.path.exists(CONFIG_FILE):
+            self.config = JsonDb.from_json(CONFIG_FILE)
+        else:
+            self.config = JsonDb({})
+        editor_path = self.config.get('editor_path')
+        if editor_path:
+            self.ui.lineEditEditorPath.setText(editor_path)
+        editor_name = self.config.get('editor_name')
+        if editor_name:
+            self.ui.lineEditEditorName.setText(editor_name)
+
+        self.ui.pushButton.clicked.connect(self.choose_editor)
+        self.ui.pushButtonConfirm.clicked.connect(self.confirm)
+        self.ui.pushButtonCancel.clicked.connect(self.cancel)
+
+    def choose_editor(self):
+        if system == 'Windows':
+            path, _ = QFileDialog.getOpenFileName(
+                self,
+                '选择编辑器',
+                None,
+                'Program (*.exe)'
+            )
+            if not path:
+                return
+            self.ui.lineEditEditorPath.setText(path)
+            name = os.path.basename(path)
+            name = name.split('.')[0].title().replace('_', ' ')
+            self.ui.lineEditEditorName.setText(name)
+            self.config['editor_path'] = path
+            self.config['editor_name'] = name
+            self.has_edited = True
+
+    def cancel(self):
+        del self.config
+        self.has_edited = False
+        self.close()
+
+    def confirm(self):
+        self.config.to_json(CONFIG_FILE)
+        self.has_edited = False
+        self.update_config.emit()
+        self.close()
 
 
 class MainWindow(QMainWindow):
@@ -76,6 +142,16 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.dropMessage.connect(self.drop_add_item)
         self.ui.listWidget.clicked.connect(self.left_click_event)
         self.ui.listWidget.itemDoubleClicked.connect(self.double_click_event)
+        self.ui.configAction.triggered.connect(self.open_config_form)
+
+    def open_config_form(self):
+        self.config_form = ConfigForm()
+        # self.config_form.update_config.connect(self.update_config)
+        self.config_form.show()
+
+    # def update_config(self):
+    #     self.config = JsonDb.from_json(CONFIG_FILE)
+    #     self.config.pretty_print()
 
     def add_context_menu(self):
         self.ui.listWidget.setContextMenuPolicy(Qt.CustomContextMenu)

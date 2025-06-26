@@ -1,5 +1,6 @@
 __pycache__/
 */ui/main_window.py
-data.json
+*/ui/config_form.py
+*.json
 tests/
 run.pyw
