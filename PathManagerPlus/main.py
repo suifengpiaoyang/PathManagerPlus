@@ -65,6 +65,9 @@ class MainWindow(QMainWindow):
         shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
         shortcut.activated.connect(self.save)
 
+        shortcut = QShortcut(QKeySequence("Delete"), self)
+        shortcut.activated.connect(self.delete_item)
+
         # add right click menu
         self.add_context_menu()
 
