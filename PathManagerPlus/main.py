@@ -81,7 +81,8 @@ class MainWindow(QMainWindow):
 
     def build_tree(self):
         self.ui.treeWidget.setHeaderHidden(True)
-        self.item_map = {}
+        # 太久了，有点忘记当初设定这个的原因了。
+        self.tree_item_map = {}
         for node_id in self.data['nodes']['root']['sub_nodes']:
             self.render_node(node_id)
         item_count = self.ui.treeWidget.topLevelItemCount()
@@ -99,10 +100,10 @@ class MainWindow(QMainWindow):
         if parent_id == 'root':
             item = QTreeWidgetItem(self.ui.treeWidget)
         else:
-            item = QTreeWidgetItem(self.item_map[parent_id])
+            item = QTreeWidgetItem(self.tree_item_map[parent_id])
         item.setText(0, name)
         item.setData(0, Qt.UserRole, node_id)
-        self.item_map[node_id] = item
+        self.tree_item_map[node_id] = item
         for _node_id in self.data['nodes'][node_id]['sub_nodes']:
             self.render_node(_node_id)
 
@@ -118,18 +119,17 @@ class MainWindow(QMainWindow):
             item.setData(Qt.UserRole, item_id)
             self.ui.listWidget.addItem(item)
 
-    def _left_click_event(self, item=None):
+    def left_click_event(self, item=None):
         self.clear_input_widgets()
         if item is None:
             item = self.ui.listWidget.currentItem()
+            if item is None:
+                return
         item_id = item.data(Qt.UserRole)
         item_data = self.data['items'][item_id]
         self.ui.lineEditName.setText(item_data['name'])
         self.ui.textEditPath.insertPlainText(item_data['path'])
         self.ui.textEditComment.insertPlainText(item_data['comment'])
-
-    def left_click_event(self):
-        self._left_click_event()
 
     def double_click_event(self):
         self.open_selected_file()
@@ -190,6 +190,18 @@ class MainWindow(QMainWindow):
             return
         system_actions.locate_file(path)
 
+    def delete_item(self):
+        """输出列表控件的项
+
+        当前版本只支持删除一项。
+        """
+        current_row = self.ui.listWidget.currentRow()
+        item = self.ui.listWidget.takeItem(current_row)  # 处理UI界面
+        item_id = item.data(Qt.UserRole)
+        self.data.remove_item(item_id)                   # 处理数据删除
+        self.left_click_event()
+        self.set_has_edited(True)
+
     def clear_input_widgets(self):
         """Clear all input widgets.
         """
@@ -200,6 +212,10 @@ class MainWindow(QMainWindow):
     def show_context_menu(self, position):
         """Show context menu and handle slots.
         """
+        current_row = self.ui.listWidget.currentRow()
+        if current_row == -1:
+            return
+
         # 右键点击时顺带触发了一次左键选中更新信息。
         self.left_click_event()
         open_selected_path = QAction('打开目标路径')
@@ -208,6 +224,7 @@ class MainWindow(QMainWindow):
         # open_path_with_sublime = QAction('使用sublime text打开文件夹')
         locate_file = QAction('定位文件')
         open_selected_file = QAction('打开目标文件(同双击)')
+        delete_item = QAction('删除')
 
         open_selected_path.triggered.connect(self.open_selected_directory)
         open_console_window.triggered.connect(self.open_console_window)
@@ -217,6 +234,7 @@ class MainWindow(QMainWindow):
         #     lambda: self.open_with_sublime(flag='path'))
         locate_file.triggered.connect(self.locate_file)
         open_selected_file.triggered.connect(self.open_selected_file)
+        delete_item.triggered.connect(self.delete_item)
 
         menu = QMenu(self.ui.listWidget)
         menu.addAction(locate_file)
@@ -226,6 +244,7 @@ class MainWindow(QMainWindow):
         # menu.addAction(open_file_with_sublime)
         # menu.addAction(open_path_with_sublime)
         # menu.addSeparator()
+        menu.addAction(delete_item)
         menu.addAction(open_selected_file)
         menu.exec_(self.ui.listWidget.mapToGlobal(position))
 
@@ -243,7 +262,7 @@ class MainWindow(QMainWindow):
             item = QListWidgetItem(basename)
             item.setData(Qt.UserRole, item_id)
             self.ui.listWidget.addItem(item)
-        self._left_click_event(item)
+        self.left_click_event(item)
         item.setSelected(True)
         self.ui.listWidget.setCurrentItem(item)
         self.ui.listWidget.setFocus(Qt.OtherFocusReason)
