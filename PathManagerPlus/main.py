@@ -19,7 +19,8 @@ from PySide2.QtWidgets import (
     QAction,
     QMenu,
     QWidget,
-    QFileDialog
+    QFileDialog,
+    QInputDialog
 )
 from PySide2.QtCore import Qt, Signal
 from .ui.main_window import Ui_MainWindow
@@ -341,16 +342,35 @@ class MainWindow(QMainWindow):
         menu.exec_(self.ui.listWidget.mapToGlobal(position))
 
     def show_tree_context_menu(self, position):
-        test_action = QAction('Test Action')
+        add_node = QAction('添加节点')
 
-        test_action.triggered.connect(self.test_action)
+        add_node.triggered.connect(self.add_node)
 
         menu = QMenu(self.ui.treeWidget)
-        menu.addAction(test_action)
+        menu.addAction(add_node)
         menu.exec_(self.ui.treeWidget.mapToGlobal(position))
 
-    def test_action(self):
-        print('This is a test.')
+    def add_node(self):
+        name, ok = QInputDialog.getText(self, "请输入节点名称", "节点名称：")
+        if not ok:
+            return
+
+        # 数据层面处理
+        node = self.ui.treeWidget.currentItem()
+        hover_node_id = node.data(0, Qt.UserRole)
+        hover_node = self.data['nodes'][hover_node_id]
+        parent_id = hover_node['parent_id']
+        new_node_id = self.data.add_node(name, parent_id)
+
+        # UI 层面处理
+        if parent_id == 'root':
+            item = QTreeWidgetItem(self.ui.treeWidget)
+        else:
+            item = QTreeWidgetItem(self.tree_item_map[parent_id])
+        item.setText(0, name)
+        item.setData(0, Qt.UserRole, new_node_id)
+        self.tree_item_map[new_node_id] = item
+        self.set_has_edited(True)
 
     def open_with_editor(self, flag):
         if flag not in ('file', 'path'):
