@@ -347,13 +347,16 @@ class MainWindow(QMainWindow):
 
         add_node = QAction('添加节点')
         add_sub_node = QAction('添加字节点')
+        edit_node_name = QAction('修改节点名称')
 
         add_node.triggered.connect(self.add_node)
         add_sub_node.triggered.connect(self.add_sub_node)
+        edit_node_name.triggered.connect(self.edit_node_name)
 
         menu = QMenu(self.ui.treeWidget)
         menu.addAction(add_node)
         menu.addAction(add_sub_node)
+        menu.addAction(edit_node_name)
 
         menu.exec_(self.ui.treeWidget.mapToGlobal(position))
 
@@ -407,6 +410,24 @@ class MainWindow(QMainWindow):
         item.setSelected(True)
         # 得触发一次左键点击
         self.tree_item_click(item, 0)
+
+    def edit_node_name(self):
+        node = self.ui.treeWidget.currentItem()
+        node_id = node.data(0, Qt.UserRole)
+        node_data = self.data['nodes'][node_id]
+        name = node_data['name']
+
+        name, ok = QInputDialog.getText(
+            self,
+            "修改节点名称",
+            "节点名称：",
+            text=name
+        )
+        if not ok:
+            return
+        self.data.change_node_name(node_id, name)
+        node.setText(0, name)
+        self.set_has_edited(True)
 
     def open_with_editor(self, flag):
         if flag not in ('file', 'path'):
