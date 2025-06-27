@@ -171,10 +171,14 @@ class MainWindow(QMainWindow):
 
     def build_tree(self):
         self.ui.treeWidget.setHeaderHidden(True)
-        # 太久了，有点忘记当初设定这个的原因了。
+        # 渲染树节点的需要，渲染完后，这个实例变量就不需要了。
+        # 感觉还是不维护的好。因为可以减少很多时间和精力，似乎也
+        # 没有必要。想要获得的目标节点对象一般都很容易就获得了。
         self.tree_item_map = {}
         for node_id in self.data['nodes']['root']['sub_nodes']:
             self.render_node(node_id)
+        # 用完直接删除掉，回收内存。
+        del self.tree_item_map
         item_count = self.ui.treeWidget.topLevelItemCount()
         if item_count > 0:
             item = self.ui.treeWidget.topLevelItem(0)
@@ -376,10 +380,9 @@ class MainWindow(QMainWindow):
         if parent_id == 'root':
             item = QTreeWidgetItem(self.ui.treeWidget)
         else:
-            item = QTreeWidgetItem(self.tree_item_map[parent_id])
+            item = QTreeWidgetItem(node.parent())
         item.setText(0, name)
         item.setData(0, Qt.UserRole, new_node_id)
-        self.tree_item_map[new_node_id] = item
         self.set_has_edited(True)
         self.ui.treeWidget.setFocus()
         node.setSelected(False)
@@ -399,10 +402,9 @@ class MainWindow(QMainWindow):
         new_node_id = self.data.add_node(name, parent_id)
 
         # UI 层面处理
-        item = QTreeWidgetItem(self.tree_item_map[parent_id])
+        item = QTreeWidgetItem(node)
         item.setText(0, name)
         item.setData(0, Qt.UserRole, new_node_id)
-        self.tree_item_map[new_node_id] = item
         self.set_has_edited(True)
         self.ui.treeWidget.setFocus()
         node.setExpanded(True)
