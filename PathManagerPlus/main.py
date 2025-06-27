@@ -147,7 +147,7 @@ class MainWindow(QMainWindow):
         # handle slots
         self.ui.treeWidget.itemClicked.connect(self.tree_item_click)
         self.ui.listWidget.dropMessage.connect(self.drop_add_item)
-        self.ui.listWidget.clicked.connect(self.left_click_event)
+        self.ui.listWidget.clicked.connect(self.listwidget_left_click)
         self.ui.listWidget.itemDoubleClicked.connect(self.double_click_event)
         self.ui.configAction.triggered.connect(self.open_config_form)
 
@@ -209,7 +209,7 @@ class MainWindow(QMainWindow):
             item.setData(Qt.UserRole, item_id)
             self.ui.listWidget.addItem(item)
 
-    def left_click_event(self, item=None):
+    def listwidget_left_click(self, item=None):
         self.clear_input_widgets()
         if item is None:
             item = self.ui.listWidget.currentItem()
@@ -289,7 +289,7 @@ class MainWindow(QMainWindow):
         item = self.ui.listWidget.takeItem(current_row)  # 处理UI界面
         item_id = item.data(Qt.UserRole)
         self.data.remove_item(item_id)                   # 处理数据删除
-        self.left_click_event()
+        self.listwidget_left_click()
         self.set_has_edited(True)
 
     def clear_input_widgets(self):
@@ -310,7 +310,7 @@ class MainWindow(QMainWindow):
         editor_path = config.get('editor_path')
 
         # 右键点击时顺带触发了一次左键选中更新信息。
-        self.left_click_event()
+        self.listwidget_left_click()
         open_selected_path = QAction('打开目标路径')
         open_console_window = QAction('打开console窗口')
         open_file_with_editor = QAction(f'使用{editor_name}打开文件')
@@ -342,12 +342,19 @@ class MainWindow(QMainWindow):
         menu.exec_(self.ui.listWidget.mapToGlobal(position))
 
     def show_tree_context_menu(self, position):
+        item = self.ui.treeWidget.currentItem()
+        self.tree_item_click(item, 0)
+
         add_node = QAction('添加节点')
+        add_sub_node = QAction('添加字节点')
 
         add_node.triggered.connect(self.add_node)
+        add_sub_node.triggered.connect(self.add_sub_node)
 
         menu = QMenu(self.ui.treeWidget)
         menu.addAction(add_node)
+        menu.addAction(add_sub_node)
+
         menu.exec_(self.ui.treeWidget.mapToGlobal(position))
 
     def add_node(self):
@@ -371,6 +378,35 @@ class MainWindow(QMainWindow):
         item.setData(0, Qt.UserRole, new_node_id)
         self.tree_item_map[new_node_id] = item
         self.set_has_edited(True)
+        self.ui.treeWidget.setFocus()
+        node.setSelected(False)
+        item.setSelected(True)
+        # 得触发一次左键点击
+        self.tree_item_click(item, 0)
+
+    def add_sub_node(self):
+        name, ok = QInputDialog.getText(self, "请输入子节点名称", "子节点名称：")
+        if not ok:
+            return
+
+        # 数据层面处理
+        node = self.ui.treeWidget.currentItem()
+        hover_node_id = node.data(0, Qt.UserRole)
+        parent_id = hover_node_id
+        new_node_id = self.data.add_node(name, parent_id)
+
+        # UI 层面处理
+        item = QTreeWidgetItem(self.tree_item_map[parent_id])
+        item.setText(0, name)
+        item.setData(0, Qt.UserRole, new_node_id)
+        self.tree_item_map[new_node_id] = item
+        self.set_has_edited(True)
+        self.ui.treeWidget.setFocus()
+        node.setExpanded(True)
+        node.setSelected(False)
+        item.setSelected(True)
+        # 得触发一次左键点击
+        self.tree_item_click(item, 0)
 
     def open_with_editor(self, flag):
         if flag not in ('file', 'path'):
@@ -418,7 +454,7 @@ class MainWindow(QMainWindow):
             item = QListWidgetItem(basename)
             item.setData(Qt.UserRole, item_id)
             self.ui.listWidget.addItem(item)
-        self.left_click_event(item)
+        self.listwidget_left_click(item)
         item.setSelected(True)
         self.ui.listWidget.setCurrentItem(item)
         self.ui.listWidget.setFocus(Qt.OtherFocusReason)
