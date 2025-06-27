@@ -352,15 +352,19 @@ class MainWindow(QMainWindow):
         add_node = QAction('添加节点')
         add_sub_node = QAction('添加字节点')
         edit_node_name = QAction('修改节点名称')
+        delete_node = QAction('删除节点')
 
         add_node.triggered.connect(self.add_node)
         add_sub_node.triggered.connect(self.add_sub_node)
         edit_node_name.triggered.connect(self.edit_node_name)
+        delete_node.triggered.connect(self.delete_node)
 
         menu = QMenu(self.ui.treeWidget)
         menu.addAction(add_node)
         menu.addAction(add_sub_node)
         menu.addAction(edit_node_name)
+        menu.addSeparator()
+        menu.addAction(delete_node)
 
         menu.exec_(self.ui.treeWidget.mapToGlobal(position))
 
@@ -429,6 +433,31 @@ class MainWindow(QMainWindow):
             return
         self.data.change_node_name(node_id, name)
         node.setText(0, name)
+        self.set_has_edited(True)
+
+    def delete_node(self):
+        flag = QMessageBox.question(
+            self,
+            '警告',
+            '你确定要删除该节点和所有字节点，以及全部相关的数据？',
+            QMessageBox.Yes | QMessageBox.Cancel
+        )
+        if flag != QMessageBox.StandardButton.Yes:
+            return
+        node = self.ui.treeWidget.currentItem()
+        node_id = node.data(0, Qt.UserRole)
+
+        # 处理数据层面
+        self.data.remove_node(node_id)
+
+        # 处理 UI 层面
+        parent = node.parent()
+        if parent:
+            parent.removeChild(node)  # 从父节点中移除
+        else:
+            index = self.ui.treeWidget.indexOfTopLevelItem(node)
+            self.ui.treeWidget.takeTopLevelItem(index)  # 删除顶层节点
+
         self.set_has_edited(True)
 
     def open_with_editor(self, flag):
@@ -502,7 +531,7 @@ class MainWindow(QMainWindow):
         # self.config.save(CONFIG_FILE)
 
         if self.has_edited:
-            flag = QMessageBox.warning(
+            flag = QMessageBox.question(
                 self,
                 '警告',
                 '当前数据善未保存，是否要保存数据？',
