@@ -150,6 +150,9 @@ class DataStorage(dict):
             self['items'].pop(item_id)
         self['nodes'].pop(node_id)
 
+    def change_node_name(self, node_id, name):
+        self['nodes'][node_id]['name'] = name
+
     def pretty_print(self, indent=4):
         print(json.dumps(self, indent=indent, ensure_ascii=False))
 
@@ -174,6 +177,7 @@ if __name__ == '__main__':
     d.add_item('c1', node_c)
     d.add_item('c2', node_c)
     # d.remove_node(node_a)
+    d.change_node_name(node_a, 'Test')
     d.pretty_print()
     # d = gen_base_data()
     # d.pretty_print()
