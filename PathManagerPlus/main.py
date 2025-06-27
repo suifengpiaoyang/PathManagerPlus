@@ -41,10 +41,16 @@ elif system == "Linux":
 elif system == "Darwin":
     raise SysteExit('当前该程序的代码不支持这个系统。')
 
+if os.path.exists(CONFIG_FILE):
+    config = JsonDb.from_json(CONFIG_FILE)
+else:
+    config = JsonDb({})
+    # 这里要不要保存是一个问题
+
 
 class ConfigForm(QWidget):
 
-    update_config = Signal()
+    update_config = Signal(JsonDb)
 
     def __init__(self):
         super().__init__()
@@ -98,9 +104,8 @@ class ConfigForm(QWidget):
         self.close()
 
     def confirm(self):
-        self.config.to_json(CONFIG_FILE)
         self.has_edited = False
-        self.update_config.emit()
+        self.update_config.emit(self.config)
         self.close()
 
 
@@ -146,12 +151,13 @@ class MainWindow(QMainWindow):
 
     def open_config_form(self):
         self.config_form = ConfigForm()
-        # self.config_form.update_config.connect(self.update_config)
+        self.config_form.update_config.connect(self.update_config)
         self.config_form.show()
 
-    # def update_config(self):
-    #     self.config = JsonDb.from_json(CONFIG_FILE)
-    #     self.config.pretty_print()
+    def update_config(self, _config):
+        config.update(_config)
+        config.to_json(CONFIG_FILE)
+        # 这里可能后续还需要有修改字体后更新窗体渲染的代码
 
     def add_context_menu(self):
         self.ui.listWidget.setContextMenuPolicy(Qt.CustomContextMenu)
