@@ -164,6 +164,9 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.listWidget.customContextMenuRequested.connect(
             self.show_context_menu)
+        self.ui.treeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.treeWidget.customContextMenuRequested.connect(
+            self.show_tree_context_menu)
 
     def build_tree(self):
         self.ui.treeWidget.setHeaderHidden(True)
@@ -336,6 +339,18 @@ class MainWindow(QMainWindow):
         menu.addAction(delete_item)
         menu.addAction(open_selected_file)
         menu.exec_(self.ui.listWidget.mapToGlobal(position))
+
+    def show_tree_context_menu(self, position):
+        test_action = QAction('Test Action')
+
+        test_action.triggered.connect(self.test_action)
+
+        menu = QMenu(self.ui.treeWidget)
+        menu.addAction(test_action)
+        menu.exec_(self.ui.treeWidget.mapToGlobal(position))
+
+    def test_action(self):
+        print('This is a test.')
 
     def open_with_editor(self, flag):
         if flag not in ('file', 'path'):
