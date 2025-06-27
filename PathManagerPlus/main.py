@@ -6,7 +6,8 @@ import platform
 
 from PySide2.QtGui import (
     QIcon,
-    QKeySequence
+    QKeySequence,
+    QFont
 )
 from PySide2.QtWidgets import (
     QApplication,
@@ -430,6 +431,9 @@ class MainWindow(QMainWindow):
 def main():
 
     app = QApplication(sys.argv)
+    font = QFont()
+    font.setPointSize(13)  # 设置字体大小
+    app.setFont(font)
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
