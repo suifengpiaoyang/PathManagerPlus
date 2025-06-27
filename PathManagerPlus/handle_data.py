@@ -125,6 +125,13 @@ class DataStorage(dict):
         self['items'].pop(item_id)
         self['nodes'][parent_node]['items'].remove(item_id)
 
+    def update_item(self, item_id, update_data):
+        for key in update_data.keys():
+            if key not in ('name', 'path', 'comment'):
+                raise ValueError
+        for key, value in update_data.items():
+            self['items'][item_id][key] = value
+
     def add_node(self, name, parent_id='root'):
         while True:
             node_id = get_uuid()

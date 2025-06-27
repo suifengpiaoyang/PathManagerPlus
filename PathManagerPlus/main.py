@@ -150,6 +150,25 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.clicked.connect(self.listwidget_left_click)
         self.ui.listWidget.itemDoubleClicked.connect(self.double_click_event)
         self.ui.configAction.triggered.connect(self.open_config_form)
+        self.ui.lineEditName.editingFinished.connect(self.finish_edit)
+
+    def finish_edit(self):
+        node = self.ui.treeWidget.currentItem()
+        if not node:
+            return
+        item = self.ui.listWidget.currentItem()
+        if not item:
+            return
+        item_id = item.data(Qt.UserRole)
+        item_data = self.data['items'][item_id]
+        name = self.ui.lineEditName.text()
+        if name == item_data['name']:
+            return
+        # 处理数据层
+        self.data.update_item(item_id, {'name': name})
+        # 处理 UI 层
+        item.setText(name)
+        self.set_has_edited(True)
 
     def open_config_form(self):
         self.config_form = ConfigForm()
