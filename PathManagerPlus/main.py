@@ -301,22 +301,25 @@ class MainWindow(QMainWindow):
         if current_row == -1:
             return
 
+        editor_name = config.get('editor_name', '代码编辑器')
+        editor_path = config.get('editor_path')
+
         # 右键点击时顺带触发了一次左键选中更新信息。
         self.left_click_event()
         open_selected_path = QAction('打开目标路径')
         open_console_window = QAction('打开console窗口')
-        # open_file_with_sublime = QAction('使用sublime text打开文件')
-        # open_path_with_sublime = QAction('使用sublime text打开文件夹')
+        open_file_with_editor = QAction(f'使用{editor_name}打开文件')
+        open_path_with_editor = QAction(f'使用{editor_name}打开文件夹')
         locate_file = QAction('定位文件')
         open_selected_file = QAction('打开目标文件(同双击)')
         delete_item = QAction('删除')
 
         open_selected_path.triggered.connect(self.open_selected_directory)
         open_console_window.triggered.connect(self.open_console_window)
-        # open_file_with_sublime.triggered.connect(
-        #     lambda: self.open_with_sublime(flag='file'))
-        # open_path_with_sublime.triggered.connect(
-        #     lambda: self.open_with_sublime(flag='path'))
+        open_file_with_editor.triggered.connect(
+            lambda: self.open_with_editor(flag='file'))
+        open_path_with_editor.triggered.connect(
+            lambda: self.open_with_editor(flag='path'))
         locate_file.triggered.connect(self.locate_file)
         open_selected_file.triggered.connect(self.open_selected_file)
         delete_item.triggered.connect(self.delete_item)
@@ -326,12 +329,44 @@ class MainWindow(QMainWindow):
         menu.addAction(open_selected_path)
         menu.addAction(open_console_window)
         menu.addSeparator()
-        # menu.addAction(open_file_with_sublime)
-        # menu.addAction(open_path_with_sublime)
-        # menu.addSeparator()
+        menu.addAction(open_file_with_editor)
+        menu.addAction(open_path_with_editor)
+        menu.addSeparator()
         menu.addAction(delete_item)
         menu.addAction(open_selected_file)
         menu.exec_(self.ui.listWidget.mapToGlobal(position))
+
+    def open_with_editor(self, flag):
+        if flag not in ('file', 'path'):
+            print('flag 必须为 file 或者 path')
+            return
+        editor_path = config.get('editor_path', None)
+        if editor_path is None:
+            QMessageBox.about(
+                self,
+                '提示',
+                '请先在[首选项]里面配置代码编辑器路径。'
+            )
+            return
+        if not os.path.exists(editor_path):
+            QMessageBox.critical(self, '错误', f'[{editor_path}]不存在！')
+            return
+        item = self.ui.listWidget.currentItem()
+        if item is None:
+            return
+        item_id = item.data(Qt.UserRole)
+        item_data = self.data['items'][item_id]
+        path = item_data['path']
+        if not path:
+            QMessageBox.critical(self, '错误', '路径不能为空值！')
+            return
+        if not os.path.exists(path):
+            QMessageBox.critical(self, '错误', f'找不到[{path}]！')
+            return
+        if flag == 'file' and os.path.isdir(path):
+            QMessageBox.critical(self, '错误', '目标是一个文件夹！')
+            return
+        subprocess.Popen([editor_path, path])
 
     def drop_add_item(self, urllist):
         node = self.ui.treeWidget.currentItem()
