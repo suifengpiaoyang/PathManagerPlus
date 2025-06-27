@@ -487,10 +487,19 @@ class MainWindow(QMainWindow):
         if not os.path.exists(path):
             QMessageBox.critical(self, '错误', f'找不到[{path}]！')
             return
-        if flag == 'file' and os.path.isdir(path):
-            QMessageBox.critical(self, '错误', '目标是一个文件夹！')
-            return
-        subprocess.Popen([editor_path, path])
+        if flag == 'file':
+            if os.path.isdir(path):
+                QMessageBox.critical(self, '错误', '目标是一个文件夹！')
+                return
+            target = path
+        elif flag == 'path':
+            if os.path.isdir(path):
+                target = path
+            else:
+                target = os.path.dirname(path)
+        else:
+            raise TypeError
+        subprocess.Popen([editor_path, target])
 
     def drop_add_item(self, urllist):
         node = self.ui.treeWidget.currentItem()
