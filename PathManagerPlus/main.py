@@ -62,9 +62,8 @@ class ConfigForm(QWidget):
         self.has_edited = False
 
         # set gui icon
-        icon_path = os.path.join(STATIC_PATH, 'folder.ico')
-        if os.path.exists(icon_path):
-            self.setWindowIcon(QIcon(icon_path))
+        if os.path.exists(ICON_PATH):
+            self.setWindowIcon(QIcon(ICON_PATH))
 
         # load config file
         if os.path.exists(CONFIG_FILE):
@@ -122,9 +121,10 @@ class MainWindow(QMainWindow):
         self.has_edited = False
 
         # set gui icon
-        icon_path = os.path.join(STATIC_PATH, 'folder.ico')
-        if os.path.exists(icon_path):
-            self.setWindowIcon(QIcon(icon_path))
+        if os.path.exists(ICON_PATH):
+            self.setWindowIcon(QIcon(ICON_PATH))
+        if os.path.exists(SAVE_ICON_PATH):
+            self.ui.saveAction.setIcon(QIcon(SAVE_ICON_PATH))
 
         # data init
         if not os.path.exists(DATABASE):
@@ -151,6 +151,7 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.itemDoubleClicked.connect(self.double_click_event)
         self.ui.configAction.triggered.connect(self.open_config_form)
         self.ui.lineEditName.editingFinished.connect(self.finish_edit)
+        self.ui.saveAction.triggered.connect(self.save)
 
     def finish_edit(self):
         node = self.ui.treeWidget.currentItem()
