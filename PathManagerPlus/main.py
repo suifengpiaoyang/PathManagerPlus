@@ -156,6 +156,8 @@ class MainWindow(QMainWindow):
         self.ui.configAction.triggered.connect(self.open_config_form)
         self.ui.lineEditName.editingFinished.connect(self.finish_edit)
         self.ui.textEditPath.editingFinished.connect(self.change_path_data)
+        self.ui.textEditComment.editingFinished.connect(
+            self.change_comment_data)
 
     def change_path_data(self):
         node = self.ui.treeWidget.currentItem()
@@ -169,6 +171,20 @@ class MainWindow(QMainWindow):
         path = self.ui.textEditPath.toPlainText()
         # 处理数据层
         self.data.update_item(item_id, {'path': path})
+        self.set_has_edited(True)
+
+    def change_comment_data(self):
+        node = self.ui.treeWidget.currentItem()
+        if not node:
+            return
+        item = self.ui.listWidget.currentItem()
+        if not item:
+            return
+        item_id = item.data(Qt.UserRole)
+        item_data = self.data['items'][item_id]
+        comment = self.ui.textEditComment.toPlainText()
+        # 处理数据层
+        self.data.update_item(item_id, {'comment': comment})
         self.set_has_edited(True)
 
     def finish_edit(self):
