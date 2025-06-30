@@ -80,10 +80,10 @@
            <widget class="QLineEdit" name="lineEditName"/>
           </item>
           <item>
-           <widget class="QPlainTextEdit" name="textEditPath"/>
+           <widget class="CustomQTextEdit" name="textEditPath"/>
           </item>
           <item>
-           <widget class="QPlainTextEdit" name="textEditComment"/>
+           <widget class="CustomQTextEdit" name="textEditComment"/>
           </item>
          </layout>
         </item>
@@ -132,6 +132,11 @@
   <customwidget>
    <class>CustomQListWidget</class>
    <extends>QListWidget</extends>
+   <header location="global">.custom_widgets.h</header>
+  </customwidget>
+  <customwidget>
+   <class>CustomQTextEdit</class>
+   <extends>QPlainTextEdit</extends>
    <header location="global">.custom_widgets.h</header>
   </customwidget>
  </customwidgets>

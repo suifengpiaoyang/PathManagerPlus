@@ -19,7 +19,8 @@ class CustomQListWidget(QListWidget):
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
             event.accept()
-        elif event.mimeData().hasFormat('application/x-qabstractitemmodeldatalist'):
+        elif event.mimeData().hasFormat(
+                'application/x-qabstractitemmodeldatalist'):
             event.accept()
         else:
             event.ignore()
@@ -28,7 +29,8 @@ class CustomQListWidget(QListWidget):
         if event.mimeData().hasUrls():
             urls = event.mimeData().urls()
             self.dropMessage.emit(urls)
-        elif event.mimeData().hasFormat('application/x-qabstractitemmodeldatalist'):
+        elif event.mimeData().hasFormat(
+                'application/x-qabstractitemmodeldatalist'):
             drop_position = event.pos()
             drop_row = self.row(self.itemAt(drop_position))
             start_row = self.currentRow()
@@ -36,3 +38,17 @@ class CustomQListWidget(QListWidget):
             # event.accept()
         else:
             event.ignore()
+
+
+class CustomQTextEdit(QTextEdit):
+
+    editingFinished = Signal()
+
+    def focusInEvent(self, event):
+        self._base_data = self.toPlainText()
+        super().focusInEvent(event)
+
+    def focusOutEvent(self, event):
+        if self.toPlainText() != self._base_data:
+            self.editingFinished.emit()
+        super().focusOutEvent(event)

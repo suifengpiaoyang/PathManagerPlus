@@ -121,6 +121,10 @@ class MainWindow(QMainWindow):
         self.BASE_WINDOW_TITLE = self.windowTitle()
         self.has_edited = False
 
+        # 临时隐藏掉工具栏和状态栏
+        self.ui.toolBar.hide()
+        self.ui.statusBar.hide()
+
         # set gui icon
         icon_path = os.path.join(STATIC_PATH, 'folder.ico')
         if os.path.exists(icon_path):
@@ -151,6 +155,21 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.itemDoubleClicked.connect(self.double_click_event)
         self.ui.configAction.triggered.connect(self.open_config_form)
         self.ui.lineEditName.editingFinished.connect(self.finish_edit)
+        self.ui.textEditPath.editingFinished.connect(self.change_path_data)
+
+    def change_path_data(self):
+        node = self.ui.treeWidget.currentItem()
+        if not node:
+            return
+        item = self.ui.listWidget.currentItem()
+        if not item:
+            return
+        item_id = item.data(Qt.UserRole)
+        item_data = self.data['items'][item_id]
+        path = self.ui.textEditPath.toPlainText()
+        # 处理数据层
+        self.data.update_item(item_id, {'path': path})
+        self.set_has_edited(True)
 
     def finish_edit(self):
         node = self.ui.treeWidget.currentItem()
