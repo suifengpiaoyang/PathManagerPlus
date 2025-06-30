@@ -28,11 +28,11 @@ def get_data_format(data_type):
 
 
 class JsonDb(dict):
- 
+
     """A json storage with some functions.
- 
+
     Usage:
- 
+
         >>> data = {
             'Jan': 'January',
             'Feb': 'February'
@@ -54,29 +54,29 @@ class JsonDb(dict):
         >>> months == months2
         True
     """
- 
+
     @classmethod
     def from_json(cls, file):
         with open(file, 'r', encoding='utf-8')as fl:
             return cls(json.load(fl))
- 
+
     @classmethod
     def from_string(cls, json_str):
         return cls(json.loads(json_str))
- 
+
     def format_json(self):
         return json.dumps(self, indent=4, ensure_ascii=False)
- 
+
     def pretty_print(self):
         print(self.format_json())
- 
+
     def to_json(self, file):
         with open(file, 'w', encoding='utf-8')as fl:
             json.dump(self, fl, indent=4, ensure_ascii=False)
- 
+
     def __str__(self):
         return json.dumps(self, ensure_ascii=False)
- 
+
     __repr__ = __str__
 
 
@@ -157,6 +157,26 @@ class DataStorage(dict):
             self['items'].pop(item_id)
         self['nodes'].pop(node_id)
 
+    def move_item_within_node(self, item_id, to_index):
+        """
+        item_id 在 node 的 items 列表里面是唯一的。
+        to_index: 0 表示插入到最前面。该值可以是负数，表现和
+        python 的 list.insert 本质相同。但在实际使用容易误解。
+        比如当该值是 -1 时，代表在最后一个之前插入数值，也就是
+        插入值之后的最终结果是在倒数第二个。这个需要特别注意。
+        """
+        node_id = self['items'][item_id]['parent_id']
+        self['nodes'][node_id]['items'].remove(item_id)
+        self['nodes'][node_id]['items'].insert(to_index, item_id)
+
+    def move_item_to_first(self, item_id):
+        self.move_item_within_node(item_id, 0)
+
+    def move_item_to_last(self, item_id):
+        node_id = self['items'][item_id]['parent_id']
+        self['nodes'][node_id]['items'].remove(item_id)
+        self['nodes'][node_id]['items'].append(item_id)
+
     def change_node_name(self, node_id, name):
         self['nodes'][node_id]['name'] = name
 
@@ -181,11 +201,17 @@ if __name__ == '__main__':
     node_c = d.add_node('C', node_b)
     d.add_item('b1', node_b)
     d.add_item('b2', node_b)
-    d.add_item('c1', node_c)
-    d.add_item('c2', node_c)
+    item1 = d.add_item('c1', node_c)
+    item2 = d.add_item('c2', node_c)
+    item3 = d.add_item('c3', node_c)
     # d.remove_node(node_a)
-    d.change_node_name(node_a, 'Test')
-    d.pretty_print()
+    # d.change_node_name(node_a, 'Test')
+    print(d['nodes'][node_c]['items'])
+    # d.move_item_within_node(item3, 0)
+    # d.move_item_to_last(item1)
+    d.move_item_to_first(item3)
+    print(d['nodes'][node_c]['items'])
+    # d.pretty_print()
     # d = gen_base_data()
     # d.pretty_print()
     # d = DataStorage.from_json('data.json')

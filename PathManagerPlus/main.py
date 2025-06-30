@@ -158,6 +158,25 @@ class MainWindow(QMainWindow):
         self.ui.textEditPath.editingFinished.connect(self.change_path_data)
         self.ui.textEditComment.editingFinished.connect(
             self.change_comment_data)
+        self.ui.listWidget.dragDropSignal.connect(self.handle_internal_drop)
+
+    def handle_internal_drop(self, startrow, endrow):
+        item = self.ui.listWidget.currentItem()
+        if not item:
+            return
+        item_id = item.data(Qt.UserRole)
+        item_data = self.data['items'][item_id]
+        parent_id = item_data['parent_id']
+
+        # 处理 UI
+        row = self.ui.listWidget.row(item)
+        self.ui.listWidget.takeItem(startrow)
+        self.ui.listWidget.insertItem(endrow, item)
+        self.ui.listWidget.setCurrentRow(endrow)
+
+        # 处理数据层面
+        self.data.move_item_within_node(item_id, endrow)
+        self.set_has_edited(True)
 
     def change_path_data(self):
         node = self.ui.treeWidget.currentItem()
