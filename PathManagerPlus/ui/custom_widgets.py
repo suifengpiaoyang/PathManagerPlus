@@ -1,5 +1,10 @@
 from PySide2.QtCore import Signal
-from PySide2.QtWidgets import QListWidget, QTextEdit
+from PySide2.QtWidgets import (
+    QListWidget,
+    QTextEdit,
+    QTreeWidget,
+    QTreeWidgetItem
+)
 
 
 class CustomQListWidget(QListWidget):
@@ -38,6 +43,40 @@ class CustomQListWidget(QListWidget):
             # event.accept()
         else:
             event.ignore()
+
+
+class CustomQTreeWidget(QTreeWidget):
+    dropFinished = Signal(dict)
+
+    def dropEvent(self, event):
+        item = self.currentItem()
+        if not item:
+            return
+        old_parent = item.parent()
+        if old_parent is None:
+            old_index = self.indexOfTopLevelItem(item)
+        else:
+            old_index = old_parent.indexOfChild(item)
+        super().dropEvent(event)
+        self.currentItem().setSelected(False)
+        new_parent = item.parent()
+        if new_parent is None:
+            new_index = self.indexOfTopLevelItem(item)
+        else:
+            new_index = new_parent.indexOfChild(item)
+            new_parent.setExpanded(True)
+        item.setSelected(True)
+        if old_parent == new_parent and old_index == new_index:
+            return
+        else:
+            drag_data = {
+                'item': item,
+                'old_index': old_index,
+                'new_index': new_index,
+                'old_parent': old_parent,
+                'new_parent': new_parent
+            }
+            self.dropFinished.emit(drag_data)
 
 
 class CustomQTextEdit(QTextEdit):

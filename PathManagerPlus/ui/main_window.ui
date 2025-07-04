@@ -41,7 +41,16 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QTreeWidget" name="treeWidget">
+         <widget class="CustomQTreeWidget" name="treeWidget">
+          <property name="dragEnabled">
+           <bool>true</bool>
+          </property>
+          <property name="dragDropMode">
+           <enum>QAbstractItemView::InternalMove</enum>
+          </property>
+          <property name="autoExpandDelay">
+           <number>300</number>
+          </property>
           <column>
            <property name="text">
             <string notr="true">1</string>
@@ -144,6 +153,11 @@
   <customwidget>
    <class>CustomQTextEdit</class>
    <extends>QPlainTextEdit</extends>
+   <header location="global">.custom_widgets.h</header>
+  </customwidget>
+  <customwidget>
+   <class>CustomQTreeWidget</class>
+   <extends>QTreeWidget</extends>
    <header location="global">.custom_widgets.h</header>
   </customwidget>
  </customwidgets>

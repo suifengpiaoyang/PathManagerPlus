@@ -136,6 +136,10 @@ class MainWindow(QMainWindow):
             self.data.to_json(DATABASE)
         else:
             self.data = DataStorage.from_json(DATABASE)
+            status = self.data.check_data_integrity()
+            if not status:
+                # 修复数据的同时，将修复完的数据保存到数据库。
+                self.data.fix_data(DATABASE)
         self.build_tree()
 
         # shortcuts
@@ -158,9 +162,61 @@ class MainWindow(QMainWindow):
         self.ui.textEditPath.editingFinished.connect(self.change_path_data)
         self.ui.textEditComment.editingFinished.connect(
             self.change_comment_data)
-        self.ui.listWidget.dragDropSignal.connect(self.handle_internal_drop)
+        self.ui.listWidget.dragDropSignal.connect(self.internal_list_item_drop)
+        self.ui.treeWidget.dropFinished.connect(self.internal_tree_item_drop)
 
-    def handle_internal_drop(self, startrow, endrow):
+    def _get_parent_id(self, qt_node):
+        """
+        qt_node: type QTreeWidgetItem
+
+        UI 层面第一层的节点的父节点是 None，而在数据层面，第一层的父节点
+        是 root，而 root 的父节点才是 None
+        所以，如果 UI 返回的父节点对象是 None 的话，就意味着它们是在第一层，
+        对应的数据层面父节点的 id 应该是 root。而如果返回的父节点是一个实实在在
+        的对象的话，那么，实际上父节点 id 也就是这个节点所存的那个值
+        """
+        if qt_node is None:
+            parent_id = 'root'
+        else:
+            parent_id = qt_node.data(0, Qt.UserRole)
+        return parent_id
+
+    def internal_tree_item_drop(self, drag_data):
+
+        # parse data
+        node = drag_data['item']
+        old_index = drag_data['old_index']
+        new_index = drag_data['new_index']
+        old_parent = drag_data['old_parent']
+        new_parent = drag_data['new_parent']
+        if not node:
+            return
+        # 移动一个节点需要知道四个要素：
+        # 1. 原来节点的父节点的 id
+        # 2. 原来节点在父节点中的位置，也就是下标
+        # 3. 移动后节点的父节点的 id
+        # 4. 移动后在父节点中的位置，也就是下标
+        # 两个下标在 UI 层面一下就拿到了。所以需要着重处理的是父节点的问题。
+        node_id = node.data(0, Qt.UserRole)
+        new_parent_id = self._get_parent_id(new_parent)
+        old_parent_id = self._get_parent_id(old_parent)
+        # print(
+        #     f'{self.data.get_node_name(old_parent_id)}>'
+        #     f'{self.data.get_node_name(node_id)} >> '
+        #     f'{self.data.get_node_name(new_parent_id)}>'
+        #     f'{self.data.get_node_name(node_id)}'
+        # )
+        # print(f'{old_parent_id}>{node_id} >> {new_parent_id}>{node_id}')
+        if old_parent_id == new_parent_id and old_index == new_index:
+            return
+        elif old_parent_id == new_parent_id and old_index != new_index:
+            self.data.change_node_index(node_id, new_index)
+        else:
+            self.data.change_node_parent(node_id, new_parent_id, new_index)
+        self.set_has_edited(True)
+
+
+    def internal_list_item_drop(self, startrow, endrow):
         item = self.ui.listWidget.currentItem()
         if not item:
             return
