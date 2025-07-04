@@ -3,7 +3,8 @@ from PySide2.QtWidgets import (
     QListWidget,
     QTextEdit,
     QTreeWidget,
-    QTreeWidgetItem
+    QTreeWidgetItem,
+    QAbstractItemView
 )
 
 
@@ -46,11 +47,51 @@ class CustomQListWidget(QListWidget):
 
 
 class CustomQTreeWidget(QTreeWidget):
+    dropMessage = Signal(list)
     dropFinished = Signal(dict)
+    updateListValue = Signal(QTreeWidgetItem)
 
-    def dropEvent(self, event):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setAcceptDrops(True)
+
+    def mimeTypes(self):
+        mimetypes = super().mimeTypes()
+        mimetypes.append('text/uri-list')
+        return mimetypes
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        elif event.mimeData().hasFormat(
+                "application/x-qabstractitemmodeldatalist"):
+            event.accept()
+        else:
+            event.ignore()
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+            item = self.itemAt(event.pos())
+            if item:
+                self.setCurrentItem(item)  # 可选
+                # 或者高亮选中
+                item.setSelected(True)
+                # 还需要打开树父节点
+                if item.childCount() > 0 and not item.isExpanded():
+                    item.setExpanded(True)
+                # 这里还需要界面更新数据
+                self.updateListValue.emit(item)
+        elif event.mimeData().hasFormat(
+                "application/x-qabstractitemmodeldatalist"):
+            event.accept()
+        else:
+            event.ignore()
+
+    def handleInternalDropEvent(self, event):
         item = self.currentItem()
         if not item:
+            event.ignore()
             return
         old_parent = item.parent()
         if old_parent is None:
@@ -77,6 +118,32 @@ class CustomQTreeWidget(QTreeWidget):
                 'new_parent': new_parent
             }
             self.dropFinished.emit(drag_data)
+
+    def handleFileDrop(self, event):
+        item = self.currentItem()
+        if not item:
+            event.ignore()
+            return
+        if event.mimeData().hasUrls():
+            urls = event.mimeData().urls()
+            self.dropMessage.emit(urls)
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        if event.source() == self:
+            # 树控件内部拖拽。
+            # 目前用的处理方式不完美。嘛，功能上肯定没什么问题。
+            self.setDragDropMode(QAbstractItemView.InternalMove)
+            self.handleInternalDropEvent(event)
+            self.setDragDropMode(QAbstractItemView.DragDrop)
+        elif isinstance(event.source(), CustomQListWidget):
+            # 列表控件的项拖拽到树控件上
+            pass
+        elif event.mimeData().hasUrls():
+            # 文件和文件夹等拖拽到树控件上。处理方式基本和拖拽到列表
+            # 控件上相同。
+            self.handleFileDrop(event)
 
 
 class CustomQTextEdit(QTextEdit):

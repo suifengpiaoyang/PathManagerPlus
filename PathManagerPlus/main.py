@@ -164,6 +164,12 @@ class MainWindow(QMainWindow):
             self.change_comment_data)
         self.ui.listWidget.dragDropSignal.connect(self.internal_list_item_drop)
         self.ui.treeWidget.dropFinished.connect(self.internal_tree_item_drop)
+        self.ui.treeWidget.dropMessage.connect(self.drop_add_item)
+        self.ui.treeWidget.updateListValue.connect(self.update_list_value)
+
+    def update_list_value(self, node):
+        self.tree_item_click(node, 0)
+
 
     def _get_parent_id(self, qt_node):
         """
