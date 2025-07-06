@@ -1,4 +1,4 @@
-from PySide2.QtCore import Signal
+from PySide2.QtCore import Signal, Qt
 from PySide2.QtWidgets import (
     QListWidget,
     QTextEdit,
@@ -60,6 +60,13 @@ class CustomQTreeWidget(QTreeWidget):
         mimetypes.append('text/uri-list')
         return mimetypes
 
+    def startDrag(self, supportedActions):
+        # 拿到当前项
+        item = self.currentItem()
+        if item:
+            self.updateListValue.emit(item)
+        super().startDrag(supportedActions)
+
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
@@ -103,6 +110,7 @@ class CustomQTreeWidget(QTreeWidget):
             old_index = self.indexOfTopLevelItem(item)
         else:
             old_index = old_parent.indexOfChild(item)
+        self.updateListValue.emit(item)
         super().dropEvent(event)
         self.currentItem().setSelected(False)
         new_parent = item.parent()
@@ -123,6 +131,7 @@ class CustomQTreeWidget(QTreeWidget):
                 'new_parent': new_parent
             }
             self.dropFinished.emit(drag_data)
+            self.updateListValue.emit(item)
 
     def handleFileDrop(self, event):
         item = self.currentItem()
