@@ -70,11 +70,16 @@ class CustomQTreeWidget(QTreeWidget):
             event.ignore()
 
     def dragMoveEvent(self, event):
-        if event.mimeData().hasUrls():
+        if event.source() == self:
+            # 树控件的内部拖拽，使用默认的行为处理模式，保留
+            # 拖动时的方框和一些比较人性化的行为。
+            super().dragMoveEvent(event)
+        elif event.mimeData().hasUrls():
+            # 外部拖动文件文件夹进来时的行为
             event.acceptProposedAction()
             item = self.itemAt(event.pos())
             if item:
-                self.setCurrentItem(item)  # 可选
+                self.setCurrentItem(item)
                 # 或者高亮选中
                 item.setSelected(True)
                 # 还需要打开树父节点
@@ -82,9 +87,9 @@ class CustomQTreeWidget(QTreeWidget):
                     item.setExpanded(True)
                 # 这里还需要界面更新数据
                 self.updateListValue.emit(item)
-        elif event.mimeData().hasFormat(
-                "application/x-qabstractitemmodeldatalist"):
-            event.accept()
+        # elif event.mimeData().hasFormat(
+        #         "application/x-qabstractitemmodeldatalist"):
+        #     event.accept()
         else:
             event.ignore()
 
@@ -133,10 +138,7 @@ class CustomQTreeWidget(QTreeWidget):
     def dropEvent(self, event):
         if event.source() == self:
             # 树控件内部拖拽。
-            # 目前用的处理方式不完美。嘛，功能上肯定没什么问题。
-            self.setDragDropMode(QAbstractItemView.InternalMove)
             self.handleInternalDropEvent(event)
-            self.setDragDropMode(QAbstractItemView.DragDrop)
         elif isinstance(event.source(), CustomQListWidget):
             # 列表控件的项拖拽到树控件上
             pass

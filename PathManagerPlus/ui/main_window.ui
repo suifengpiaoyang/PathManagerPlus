@@ -49,7 +49,7 @@
            <enum>QAbstractItemView::DragDrop</enum>
           </property>
           <property name="defaultDropAction">
-           <enum>Qt::IgnoreAction</enum>
+           <enum>Qt::MoveAction</enum>
           </property>
           <property name="autoExpandDelay">
            <number>300</number>
@@ -129,7 +129,7 @@
      <x>0</x>
      <y>0</y>
      <width>661</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
