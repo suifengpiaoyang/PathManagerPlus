@@ -162,14 +162,37 @@ class MainWindow(QMainWindow):
         self.ui.textEditPath.editingFinished.connect(self.change_path_data)
         self.ui.textEditComment.editingFinished.connect(
             self.change_comment_data)
-        self.ui.listWidget.dragDropSignal.connect(self.internal_list_item_drop)
-        self.ui.treeWidget.dropFinished.connect(self.internal_tree_item_drop)
-        self.ui.treeWidget.dropMessage.connect(self.drop_add_item)
+        self.ui.listWidget.dragDropSignal.connect(self.list_item_drop)
+        self.ui.treeWidget.internalItemDropFinished.connect(
+            self.internal_tree_item_drop)
+        self.ui.treeWidget.externalFilesDroppedOnTreeItem.connect(
+            self.drop_add_item)
         self.ui.treeWidget.updateListValue.connect(self.update_list_value)
+        self.ui.treeWidget.listItemsDroppedOnTreeItem.connect(
+            self.handle_list_drop)
+
+    def handle_list_drop(self, payload):
+        tree_node = payload['item']
+        ids = payload['ids']
+        if not tree_node or len(ids) == 0:
+            return
+        tree_node_id = tree_node.data(0, Qt.UserRole)
+        # 在实际情况中，操作上不可能两个不同 parent_id 的
+        # 进行一起拖动，所以如果是同一个树节点上进行将 listWidget
+        # 的项拖动到原来节点，就作为无效操作。
+        first_item_data = self.data['items'][ids[0]]
+        if first_item_data['parent_id'] == tree_node_id:
+            return
+        for item_id in ids:
+            list_item_data = self.data['items'][item_id]
+            parent_id = list_item_data['parent_id']
+            self.data.move_item_to_node(item_id, tree_node_id)
+            # 这里还缺少 ui 处理逻辑
+        self.tree_item_click(tree_node)
+        self.set_has_edited(True)
 
     def update_list_value(self, node):
         self.tree_item_click(node, 0)
-
 
     def _get_parent_id(self, qt_node):
         """
@@ -187,14 +210,14 @@ class MainWindow(QMainWindow):
             parent_id = qt_node.data(0, Qt.UserRole)
         return parent_id
 
-    def internal_tree_item_drop(self, drag_data):
+    def internal_tree_item_drop(self, payload):
 
         # parse data
-        node = drag_data['item']
-        old_index = drag_data['old_index']
-        new_index = drag_data['new_index']
-        old_parent = drag_data['old_parent']
-        new_parent = drag_data['new_parent']
+        node = payload['item']
+        old_index = payload['old_index']
+        new_index = payload['new_index']
+        old_parent = payload['old_parent']
+        new_parent = payload['new_parent']
         if not node:
             return
         # 移动一个节点需要知道四个要素：
@@ -221,23 +244,25 @@ class MainWindow(QMainWindow):
             self.data.change_node_parent(node_id, new_parent_id, new_index)
         self.set_has_edited(True)
 
-
-    def internal_list_item_drop(self, startrow, endrow):
+    def list_item_drop(self, payload):
         item = self.ui.listWidget.currentItem()
         if not item:
             return
+        darg_item = payload['drag_item']
+        start_row = payload['start_row']
+        end_row = payload['end_row']
         item_id = item.data(Qt.UserRole)
         item_data = self.data['items'][item_id]
         parent_id = item_data['parent_id']
 
         # 处理 UI
         row = self.ui.listWidget.row(item)
-        self.ui.listWidget.takeItem(startrow)
-        self.ui.listWidget.insertItem(endrow, item)
-        self.ui.listWidget.setCurrentRow(endrow)
+        self.ui.listWidget.takeItem(start_row)
+        self.ui.listWidget.insertItem(end_row, item)
+        self.ui.listWidget.setCurrentRow(end_row)
 
         # 处理数据层面
-        self.data.move_item_within_node(item_id, endrow)
+        self.data.move_item_within_node(item_id, end_row)
         self.set_has_edited(True)
 
     def change_path_data(self):
@@ -336,7 +361,7 @@ class MainWindow(QMainWindow):
         for _node_id in self.data['nodes'][node_id]['sub_nodes']:
             self.render_node(_node_id)
 
-    def tree_item_click(self, item, column):
+    def tree_item_click(self, item, column=0):
         node_id = item.data(0, Qt.UserRole)
         name = item.text(0)
         self.ui.listWidget.clear()

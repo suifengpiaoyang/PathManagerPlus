@@ -1,4 +1,10 @@
-from PySide2.QtCore import Signal, Qt
+from PySide2.QtCore import (
+    Signal,
+    QDataStream,
+    QByteArray,
+    QIODevice,
+    Qt
+)
 from PySide2.QtWidgets import (
     QListWidget,
     QTextEdit,
@@ -8,10 +14,29 @@ from PySide2.QtWidgets import (
 )
 
 
+def getItemIdsFromEvent(event):
+    ids = []
+    fmt = "application/x-qabstractitemmodeldatalist"
+    if not event.mimeData().hasFormat(fmt):
+        return ids
+    data = event.mimeData().data(fmt)
+    stream = QDataStream(data, QIODevice.ReadOnly)
+
+    while not stream.atEnd():
+        row = stream.readInt32()
+        col = stream.readInt32()
+        map_items = stream.readInt32()
+        for _ in range(map_items):
+            role = stream.readInt32()
+            value = stream.readQVariant()
+            if role == Qt.UserRole:
+                ids.append(str(value))
+    return ids
+
 class CustomQListWidget(QListWidget):
 
     dropMessage = Signal(list)
-    dragDropSignal = Signal(int, int)
+    dragDropSignal = Signal(dict)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -33,23 +58,34 @@ class CustomQListWidget(QListWidget):
 
     def dropEvent(self, event):
         if event.mimeData().hasUrls():
+            # 处理外面拖进来的文件，文件夹路径
             urls = event.mimeData().urls()
             self.dropMessage.emit(urls)
         elif event.mimeData().hasFormat(
                 'application/x-qabstractitemmodeldatalist'):
-            drop_position = event.pos()
-            drop_row = self.row(self.itemAt(drop_position))
+            # 处理内部项的拖动，这里需要区分是树项内拖动还是项外拖动
+            item = self.currentItem()
+            if not item:
+                event.ignore()
+                return
             start_row = self.currentRow()
-            self.dragDropSignal.emit(start_row, drop_row)
-            # event.accept()
+            drop_position = event.pos()
+            end_row = self.row(self.itemAt(drop_position))
+            payload = {
+                'drag_item': item,
+                'start_row': start_row,
+                'end_row': end_row
+            }
+            self.dragDropSignal.emit(payload)
         else:
             event.ignore()
 
 
 class CustomQTreeWidget(QTreeWidget):
-    dropMessage = Signal(list)
-    dropFinished = Signal(dict)
+    externalFilesDroppedOnTreeItem = Signal(list)
+    internalItemDropFinished = Signal(dict)
     updateListValue = Signal(QTreeWidgetItem)
+    listItemsDroppedOnTreeItem = Signal(dict)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -81,6 +117,18 @@ class CustomQTreeWidget(QTreeWidget):
             # 树控件的内部拖拽，使用默认的行为处理模式，保留
             # 拖动时的方框和一些比较人性化的行为。
             super().dragMoveEvent(event)
+        elif isinstance(event.source(), CustomQListWidget):
+            event.acceptProposedAction()
+            item = self.itemAt(event.pos())
+            if item:
+                self.setCurrentItem(item)
+                # 或者高亮选中
+                item.setSelected(True)
+                # 还需要打开树父节点
+                if item.childCount() > 0 and not item.isExpanded():
+                    item.setExpanded(True)
+                # 这里还需要界面更新数据
+                self.updateListValue.emit(item)
         elif event.mimeData().hasUrls():
             # 外部拖动文件文件夹进来时的行为
             event.acceptProposedAction()
@@ -94,9 +142,6 @@ class CustomQTreeWidget(QTreeWidget):
                     item.setExpanded(True)
                 # 这里还需要界面更新数据
                 self.updateListValue.emit(item)
-        # elif event.mimeData().hasFormat(
-        #         "application/x-qabstractitemmodeldatalist"):
-        #     event.accept()
         else:
             event.ignore()
 
@@ -123,15 +168,33 @@ class CustomQTreeWidget(QTreeWidget):
         if old_parent == new_parent and old_index == new_index:
             return
         else:
-            drag_data = {
+            payload = {
                 'item': item,
                 'old_index': old_index,
                 'new_index': new_index,
                 'old_parent': old_parent,
                 'new_parent': new_parent
             }
-            self.dropFinished.emit(drag_data)
+            self.internalItemDropFinished.emit(payload)
             self.updateListValue.emit(item)
+
+    def handleListItemToTree(self, event):
+        """
+        ids 为拖动到树控件上的 listWidget 的项对应 user_role 里面
+        自己数据库设定的携带的 id 值。也就是对应的 uuid，不是 python
+        系统中传统意义上对象的 id 值。
+        """
+        ids = getItemIdsFromEvent(event)
+        if len(ids) == 0:
+            return
+        item = self.currentItem()
+        if not item:
+            return
+        payload = {
+            'item': item,
+            'ids': ids
+        }
+        self.listItemsDroppedOnTreeItem.emit(payload)
 
     def handleFileDrop(self, event):
         item = self.currentItem()
@@ -140,7 +203,7 @@ class CustomQTreeWidget(QTreeWidget):
             return
         if event.mimeData().hasUrls():
             urls = event.mimeData().urls()
-            self.dropMessage.emit(urls)
+            self.externalFilesDroppedOnTreeItem.emit(urls)
         else:
             event.ignore()
 
@@ -150,7 +213,7 @@ class CustomQTreeWidget(QTreeWidget):
             self.handleInternalDropEvent(event)
         elif isinstance(event.source(), CustomQListWidget):
             # 列表控件的项拖拽到树控件上
-            pass
+            self.handleListItemToTree(event)
         elif event.mimeData().hasUrls():
             # 文件和文件夹等拖拽到树控件上。处理方式基本和拖拽到列表
             # 控件上相同。

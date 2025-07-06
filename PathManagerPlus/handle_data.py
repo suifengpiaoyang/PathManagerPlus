@@ -178,6 +178,18 @@ class DataStorage(dict):
         self['nodes'][node_id]['items'].remove(item_id)
         self['nodes'][node_id]['items'].append(item_id)
 
+    def move_item_to_node(self, item_id, node_id, to_index=None):
+        """移动列表项到别的树节点上
+        to_index 如果不设置值的话，就默认移动到末尾。
+        """
+        old_parent_id = self['items'][item_id]['parent_id']
+        self['items'][item_id]['parent_id'] = node_id
+        self['nodes'][old_parent_id]['items'].remove(item_id)
+        if to_index is None:
+            self['nodes'][node_id]['items'].append(item_id)
+        else:
+            self['nodes'][node_id]['items'].insert(to_index, item_id)
+
     def change_node_name(self, node_id, name):
         self['nodes'][node_id]['name'] = name
 
@@ -294,27 +306,28 @@ def gen_base_data():
 
 
 if __name__ == '__main__':
-    d = DataStorage.from_json('data.json')
-    status = d.check_data_integrity()
-    print(status)
-    if not status:
-        d.fix_data(
-            'data.json'
-        )
+    # d = DataStorage.from_json('data.json')
+    # status = d.check_data_integrity()
+    # print(status)
+    # if not status:
+    #     d.fix_data(
+    #         'data.json'
+    #     )
     # d.pretty_print()
-    # d = DataStorage()
-    # node_a = d.add_node('A')
-    # node_b = d.add_node('B', node_a)
-    # node_c = d.add_node('C', node_b)
-    # node_d = d.add_node('D', node_b)
-    # d.add_item('b1', node_b)
-    # d.add_item('b2', node_b)
-    # item1 = d.add_item('c1', node_c)
-    # item2 = d.add_item('c2', node_c)
-    # item3 = d.add_item('c3', node_c)
+    d = DataStorage()
+    node_a = d.add_node('A')
+    node_b = d.add_node('B', node_a)
+    node_c = d.add_node('C', node_b)
+    node_d = d.add_node('D', node_b)
+    d.add_item('b1', node_b)
+    d.add_item('b2', node_b)
+    item1 = d.add_item('c1', node_c)
+    item2 = d.add_item('c2', node_c)
+    item3 = d.add_item('c3', node_c)
     # d.print_sub_nodes_name(node_b, False)
-    # d.pretty_print()
-    # d.pretty_print()
+    d.pretty_print()
+    d.move_item_to_node(item2, node_a)
+    d.pretty_print()
     # d.change_node_parent(node_d, node_a, 0)
     # d.change_node_index(node_d, 0)
     # d.remove_node(node_a)
