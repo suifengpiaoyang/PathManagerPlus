@@ -147,7 +147,7 @@ class MainWindow(QMainWindow):
         shortcut.activated.connect(self.save)
 
         shortcut = QShortcut(QKeySequence("Delete"), self)
-        shortcut.activated.connect(self.delete_item)
+        shortcut.activated.connect(self.delete_items)
 
         # add right click menu
         self.add_context_menu()
@@ -444,16 +444,17 @@ class MainWindow(QMainWindow):
             return
         system_actions.locate_file(path)
 
-    def delete_item(self):
+    def delete_items(self):
         """输出列表控件的项
-
-        当前版本只支持删除一项。
         """
-        current_row = self.ui.listWidget.currentRow()
-        item = self.ui.listWidget.takeItem(current_row)  # 处理UI界面
-        item_id = item.data(Qt.UserRole)
-        self.data.remove_item(item_id)                   # 处理数据删除
-        self.listwidget_left_click()
+        selected_items = self.ui.listWidget.selectedItems()
+        for item in selected_items:
+            row = self.ui.listWidget.row(item)
+            self.ui.listWidget.takeItem(row)    # 处理UI界面
+            item_id = item.data(Qt.UserRole)
+            self.data.remove_item(item_id)      # 处理数据删除
+        # 实际上看这行似乎并不需要
+        # self.listwidget_left_click()
         self.set_has_edited(True)
 
     def clear_input_widgets(self):
@@ -481,7 +482,7 @@ class MainWindow(QMainWindow):
         open_path_with_editor = QAction(f'使用{editor_name}打开文件夹')
         locate_file = QAction('定位文件')
         open_selected_file = QAction('打开目标文件(同双击)')
-        delete_item = QAction('删除')
+        delete_items = QAction('删除')
 
         open_selected_path.triggered.connect(self.open_selected_directory)
         open_console_window.triggered.connect(self.open_console_window)
@@ -491,7 +492,7 @@ class MainWindow(QMainWindow):
             lambda: self.open_with_editor(flag='path'))
         locate_file.triggered.connect(self.locate_file)
         open_selected_file.triggered.connect(self.open_selected_file)
-        delete_item.triggered.connect(self.delete_item)
+        delete_items.triggered.connect(self.delete_items)
 
         menu = QMenu(self.ui.listWidget)
         menu.addAction(locate_file)
@@ -501,7 +502,7 @@ class MainWindow(QMainWindow):
         menu.addAction(open_file_with_editor)
         menu.addAction(open_path_with_editor)
         menu.addSeparator()
-        menu.addAction(delete_item)
+        menu.addAction(delete_items)
         menu.addAction(open_selected_file)
         menu.exec_(self.ui.listWidget.mapToGlobal(position))
 
