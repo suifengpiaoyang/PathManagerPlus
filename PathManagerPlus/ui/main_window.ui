@@ -129,6 +129,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="saveAction"/>
+   <addaction name="deleteAction"/>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -162,6 +163,17 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="deleteAction">
+   <property name="text">
+    <string>删除</string>
+   </property>
+   <property name="toolTip">
+    <string>删除列表项</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
    </property>
   </action>
  </widget>

@@ -129,6 +129,8 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(QIcon(ICON_PATH))
         if os.path.exists(SAVE_ICON_PATH):
             self.ui.saveAction.setIcon(QIcon(SAVE_ICON_PATH))
+        if os.path.exists(DELETE_ICON_PATH):
+            self.ui.deleteAction.setIcon(QIcon(DELETE_ICON_PATH))
 
         # data init
         if not os.path.exists(DATABASE):
@@ -142,18 +144,12 @@ class MainWindow(QMainWindow):
                 self.data.fix_data(DATABASE)
         self.build_tree()
 
-        # shortcuts
-        # shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
-        # shortcut.activated.connect(self.save)
-
-        shortcut = QShortcut(QKeySequence("Delete"), self)
-        shortcut.activated.connect(self.delete_items)
-
         # add right click menu
         self.add_context_menu()
 
         # handle slots
         self.ui.saveAction.triggered.connect(self.save)
+        self.ui.deleteAction.triggered.connect(self.delete_items)
         self.ui.treeWidget.itemClicked.connect(self.tree_item_click)
         self.ui.listWidget.dropMessage.connect(self.drop_add_item)
         self.ui.listWidget.clicked.connect(self.listwidget_left_click)
@@ -449,6 +445,13 @@ class MainWindow(QMainWindow):
         """输出列表控件的项
         """
         selected_items = self.ui.listWidget.selectedItems()
+        if len(selected_items) == 0:
+            QMessageBox.about(
+                self,
+                '提示',
+                '此功能用于删除列表上的项。你需要先选中项才能使用该功能。'
+            )
+            return
         for item in selected_items:
             row = self.ui.listWidget.row(item)
             self.ui.listWidget.takeItem(row)    # 处理UI界面
