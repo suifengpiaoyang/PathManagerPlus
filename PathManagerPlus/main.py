@@ -62,9 +62,8 @@ class ConfigForm(QWidget):
         self.has_edited = False
 
         # set gui icon
-        icon_path = os.path.join(STATIC_PATH, 'folder.ico')
-        if os.path.exists(icon_path):
-            self.setWindowIcon(QIcon(icon_path))
+        if os.path.exists(ICON_PATH):
+            self.setWindowIcon(QIcon(ICON_PATH))
 
         # load config file
         if os.path.exists(CONFIG_FILE):
@@ -122,13 +121,14 @@ class MainWindow(QMainWindow):
         self.has_edited = False
 
         # 临时隐藏掉工具栏和状态栏
-        self.ui.toolBar.hide()
+        # self.ui.toolBar.hide()
         self.ui.statusBar.hide()
 
         # set gui icon
-        icon_path = os.path.join(STATIC_PATH, 'folder.ico')
-        if os.path.exists(icon_path):
-            self.setWindowIcon(QIcon(icon_path))
+        if os.path.exists(ICON_PATH):
+            self.setWindowIcon(QIcon(ICON_PATH))
+        if os.path.exists(SAVE_ICON_PATH):
+            self.ui.saveAction.setIcon(QIcon(SAVE_ICON_PATH))
 
         # data init
         if not os.path.exists(DATABASE):
@@ -143,8 +143,8 @@ class MainWindow(QMainWindow):
         self.build_tree()
 
         # shortcuts
-        shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
-        shortcut.activated.connect(self.save)
+        # shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
+        # shortcut.activated.connect(self.save)
 
         shortcut = QShortcut(QKeySequence("Delete"), self)
         shortcut.activated.connect(self.delete_items)
@@ -153,6 +153,7 @@ class MainWindow(QMainWindow):
         self.add_context_menu()
 
         # handle slots
+        self.ui.saveAction.triggered.connect(self.save)
         self.ui.treeWidget.itemClicked.connect(self.tree_item_click)
         self.ui.listWidget.dropMessage.connect(self.drop_add_item)
         self.ui.listWidget.clicked.connect(self.listwidget_left_click)
