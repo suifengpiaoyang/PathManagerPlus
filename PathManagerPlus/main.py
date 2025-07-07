@@ -81,12 +81,15 @@ class ConfigForm(QWidget):
             self.ui.maximizeWindow.setChecked(True)
         if self.config.get('expand_tree_on_startup', False):
             self.ui.expandTree.setChecked(True)
+        if self.config.get('hide_toolbar', False):
+            self.ui.hideToolbar.setChecked(True)
 
         self.ui.pushButton.clicked.connect(self.choose_editor)
         self.ui.pushButtonConfirm.clicked.connect(self.confirm)
         self.ui.pushButtonCancel.clicked.connect(self.cancel)
         self.ui.maximizeWindow.toggled.connect(self.handle_maximize_window)
         self.ui.expandTree.toggled.connect(self.handle_expand_tree)
+        self.ui.hideToolbar.toggled.connect(self.handle_hide_toolbar)
 
     def choose_editor(self):
         if system == 'Windows':
@@ -112,6 +115,10 @@ class ConfigForm(QWidget):
 
     def handle_maximize_window(self, checked):
         self.config['maximize_window_on_startup'] = checked
+        self.has_edited = True
+
+    def handle_hide_toolbar(self, checked):
+        self.config['hide_toolbar'] = checked
         self.has_edited = True
 
     def cancel(self):
@@ -216,6 +223,8 @@ class MainWindow(QMainWindow):
         # 展开所有树节点
         if config.get('expand_tree_on_startup', False):
             self.ui.treeWidget.expandAll()
+        if config.get('hide_toolbar', False):
+            self.ui.toolBar.hide()
 
         # add right click menu
         self.add_context_menu()
