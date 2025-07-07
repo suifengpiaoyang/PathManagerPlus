@@ -25,6 +25,7 @@ from PySide2.QtWidgets import (
 from PySide2.QtCore import Qt, Signal
 from .ui.main_window import Ui_MainWindow
 from .ui.config_form import Ui_ConfigForm
+from .ui.add_path_form import Ui_AddPathForm
 from .settings import *
 from .handle_data import (
     gen_base_data,
@@ -110,6 +111,55 @@ class ConfigForm(QWidget):
         self.close()
 
 
+class AddPathForm(QWidget):
+
+    path_data_submit = Signal(dict)
+
+    def __init__(self):
+        super().__init__()
+        self.ui = Ui_AddPathForm()
+        self.ui.setupUi(self)
+
+        # set gui icon
+        if os.path.exists(ADD_ICON_PATH):
+            self.setWindowIcon(QIcon(ADD_ICON_PATH))
+
+        # handle slots
+        self.ui.pushButtonConfirm.clicked.connect(self.confirm)
+        self.ui.pushButtonCancel.clicked.connect(self.cancel)
+        self.ui.pushButtonAddMore.clicked.connect(self.add_more)
+
+    def clear_all_widgets(self):
+        self.ui.lineEditName.clear()
+        self.ui.lineEditPath.clear()
+        self.ui.plainTextEditComment.clear()
+        self.ui.lineEditName.setFocus()
+
+    def fetch_data(self):
+        name = self.ui.lineEditName.text().strip()
+        path = self.ui.lineEditPath.text().strip()
+        comment = self.ui.plainTextEditComment.toPlainText().strip()
+        payload = {
+            'name': name,
+            'path': path,
+            'comment': comment
+        }
+        return payload
+
+    def add_more(self):
+        payload = self.fetch_data()
+        self.path_data_submit.emit(payload)
+        self.clear_all_widgets()
+
+    def confirm(self):
+        payload = self.fetch_data()
+        self.path_data_submit.emit(payload)
+        self.close()
+
+    def cancel(self):
+        self.close()
+
+
 class MainWindow(QMainWindow):
 
     def __init__(self):
@@ -129,6 +179,8 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(QIcon(ICON_PATH))
         if os.path.exists(SAVE_ICON_PATH):
             self.ui.saveAction.setIcon(QIcon(SAVE_ICON_PATH))
+        if os.path.exists(ADD_ICON_PATH):
+            self.ui.addAction.setIcon(QIcon(ADD_ICON_PATH))
         if os.path.exists(DELETE_ICON_PATH):
             self.ui.deleteAction.setIcon(QIcon(DELETE_ICON_PATH))
 
@@ -149,6 +201,7 @@ class MainWindow(QMainWindow):
 
         # handle slots
         self.ui.saveAction.triggered.connect(self.save)
+        self.ui.addAction.triggered.connect(self.show_add_path_form)
         self.ui.deleteAction.triggered.connect(self.delete_items)
         self.ui.treeWidget.itemClicked.connect(self.tree_item_click)
         self.ui.listWidget.dropMessage.connect(self.drop_add_item)
@@ -167,6 +220,40 @@ class MainWindow(QMainWindow):
         self.ui.treeWidget.updateListValue.connect(self.update_list_value)
         self.ui.treeWidget.listItemsDroppedOnTreeItem.connect(
             self.handle_list_drop)
+
+    def show_add_path_form(self):
+        # 不能够直接显示
+        node = self.ui.treeWidget.currentItem()
+        if not node:
+            QMessageBox.about(
+                self,
+                '提示',
+                '当前没有选中节点，你需要选中一个节点后才能使用该功能。'
+            )
+            return
+        self.add_path_form = AddPathForm()
+        self.add_path_form.path_data_submit.connect(
+            self.handle_path_data_submit
+        )
+        self.add_path_form.show()
+
+    def handle_path_data_submit(self, payload):
+        node = self.ui.treeWidget.currentItem()
+        if not node:
+            return
+        node_id = node.data(0, Qt.UserRole)
+        item_id = self.data.add_item(payload, node_id)
+        # 更新 listWidget 的 UI
+        self.tree_item_click(node)
+        row_count = self.ui.listWidget.count()
+        last_item = self.ui.listWidget.item(row_count-1)
+        last_item_id = last_item.data(Qt.UserRole)
+        # last_item_data = self.data['items'][last_item_id]
+        # print(last_item_data)
+        self.ui.listWidget.setFocus()
+        self.ui.listWidget.setCurrentItem(last_item)
+        self.listwidget_left_click(last_item)
+        self.set_has_edited(True)
 
     def handle_list_drop(self, payload):
         tree_node = payload['item']
@@ -617,7 +704,12 @@ class MainWindow(QMainWindow):
         else:
             index = self.ui.treeWidget.indexOfTopLevelItem(node)
             self.ui.treeWidget.takeTopLevelItem(index)  # 删除顶层节点
-
+        # 如果还有节点，则刷新列表项
+        node = self.ui.treeWidget.currentItem()
+        if not node:
+            self.ui.listWidget.clear()
+        else:
+            self.tree_item_click(node)
         self.set_has_edited(True)
 
     def open_with_editor(self, flag):

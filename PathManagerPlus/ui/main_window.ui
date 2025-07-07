@@ -99,13 +99,25 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <widget class="QLineEdit" name="lineEditName"/>
+           <widget class="QLineEdit" name="lineEditName">
+            <property name="placeholderText">
+             <string>名称</string>
+            </property>
+           </widget>
           </item>
           <item>
-           <widget class="CustomQTextEdit" name="textEditPath"/>
+           <widget class="CustomQTextEdit" name="textEditPath">
+            <property name="placeholderText">
+             <string>路径</string>
+            </property>
+           </widget>
           </item>
           <item>
-           <widget class="CustomQTextEdit" name="textEditComment"/>
+           <widget class="CustomQTextEdit" name="textEditComment">
+            <property name="placeholderText">
+             <string>备注</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -128,8 +140,9 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="saveAction"/>
+   <addaction name="addAction"/>
    <addaction name="deleteAction"/>
+   <addaction name="saveAction"/>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -174,6 +187,17 @@
    </property>
    <property name="shortcut">
     <string>Del</string>
+   </property>
+  </action>
+  <action name="addAction">
+   <property name="text">
+    <string>添加</string>
+   </property>
+   <property name="toolTip">
+    <string>添加列表项</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
    </property>
   </action>
  </widget>
