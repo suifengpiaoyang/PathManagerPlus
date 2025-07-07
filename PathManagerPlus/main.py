@@ -77,10 +77,16 @@ class ConfigForm(QWidget):
         editor_name = self.config.get('editor_name')
         if editor_name:
             self.ui.lineEditEditorName.setText(editor_name)
+        if self.config.get('maximize_window_on_startup', False):
+            self.ui.maximizeWindow.setChecked(True)
+        if self.config.get('expand_tree_on_startup', False):
+            self.ui.expandTree.setChecked(True)
 
         self.ui.pushButton.clicked.connect(self.choose_editor)
         self.ui.pushButtonConfirm.clicked.connect(self.confirm)
         self.ui.pushButtonCancel.clicked.connect(self.cancel)
+        self.ui.maximizeWindow.toggled.connect(self.handle_maximize_window)
+        self.ui.expandTree.toggled.connect(self.handle_expand_tree)
 
     def choose_editor(self):
         if system == 'Windows':
@@ -99,6 +105,14 @@ class ConfigForm(QWidget):
             self.config['editor_path'] = path
             self.config['editor_name'] = name
             self.has_edited = True
+
+    def handle_expand_tree(self, checked):
+        self.config['expand_tree_on_startup'] = checked
+        self.has_edited = True
+
+    def handle_maximize_window(self, checked):
+        self.config['maximize_window_on_startup'] = checked
+        self.has_edited = True
 
     def cancel(self):
         del self.config
@@ -195,6 +209,13 @@ class MainWindow(QMainWindow):
                 # 修复数据的同时，将修复完的数据保存到数据库。
                 self.data.fix_data(DATABASE)
         self.build_tree()
+
+        # 最大化窗口
+        if config.get('maximize_window_on_startup', False):
+            self.showMaximized()
+        # 展开所有树节点
+        if config.get('expand_tree_on_startup', False):
+            self.ui.treeWidget.expandAll()
 
         # add right click menu
         self.add_context_menu()
