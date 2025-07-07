@@ -548,12 +548,10 @@ class MainWindow(QMainWindow):
             item = QTreeWidgetItem(node.parent())
         item.setText(0, name)
         item.setData(0, Qt.UserRole, new_node_id)
-        self.set_has_edited(True)
         self.ui.treeWidget.setFocus()
-        node.setSelected(False)
-        item.setSelected(True)
-        # 得触发一次左键点击
-        self.tree_item_click(item, 0)
+        self.ui.treeWidget.setCurrentItem(item)
+        self.tree_item_click(item)
+        self.set_has_edited(True)
 
     def add_sub_node(self):
         name, ok = QInputDialog.getText(self, "请输入子节点名称", "子节点名称：")
@@ -570,13 +568,10 @@ class MainWindow(QMainWindow):
         item = QTreeWidgetItem(node)
         item.setText(0, name)
         item.setData(0, Qt.UserRole, new_node_id)
-        self.set_has_edited(True)
         self.ui.treeWidget.setFocus()
-        node.setExpanded(True)
-        node.setSelected(False)
-        item.setSelected(True)
-        # 得触发一次左键点击
-        self.tree_item_click(item, 0)
+        self.ui.treeWidget.setCurrentItem(item)
+        self.tree_item_click(item)
+        self.set_has_edited(True)
 
     def edit_node_name(self):
         node = self.ui.treeWidget.currentItem()
