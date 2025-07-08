@@ -250,6 +250,16 @@ class MainWindow(QMainWindow):
         self.ui.treeWidget.updateListValue.connect(self.update_list_value)
         self.ui.treeWidget.listItemsDroppedOnTreeItem.connect(
             self.handle_list_drop)
+        self.ui.listWidget.listKeyPressSignal.connect(self.list_key_press)
+
+    def list_key_press(self, key):
+        if key in ('up', 'down'):
+            item = self.ui.listWidget.currentItem()
+            self.listwidget_left_click(item)
+        elif key == 'left':
+            self.ui.treeWidget.setFocus()
+        else:
+            pass
 
     def show_add_path_form(self):
         # 不能够直接显示
@@ -276,7 +286,7 @@ class MainWindow(QMainWindow):
         # 更新 listWidget 的 UI
         self.tree_item_click(node)
         row_count = self.ui.listWidget.count()
-        last_item = self.ui.listWidget.item(row_count-1)
+        last_item = self.ui.listWidget.item(row_count - 1)
         last_item_id = last_item.data(Qt.UserRole)
         # last_item_data = self.data['items'][last_item_id]
         # print(last_item_data)

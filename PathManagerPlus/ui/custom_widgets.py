@@ -33,10 +33,12 @@ def getItemIdsFromEvent(event):
                 ids.append(str(value))
     return ids
 
+
 class CustomQListWidget(QListWidget):
 
     dropMessage = Signal(list)
     dragDropSignal = Signal(dict)
+    listKeyPressSignal = Signal(str)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -79,6 +81,15 @@ class CustomQListWidget(QListWidget):
             self.dragDropSignal.emit(payload)
         else:
             event.ignore()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Up:
+            self.listKeyPressSignal.emit('up')
+        elif event.key() == Qt.Key_Down:
+            self.listKeyPressSignal.emit('down')
+        elif event.key() == Qt.Key_Left:
+            self.listKeyPressSignal.emit('left')
+        super().keyPressEvent(event)
 
 
 class CustomQTreeWidget(QTreeWidget):
