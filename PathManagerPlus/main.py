@@ -194,6 +194,8 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
+        self.ui.splitter.setSizes([200, 600])
+
         self.BASE_WINDOW_TITLE = self.windowTitle()
         self.has_edited = False
 
