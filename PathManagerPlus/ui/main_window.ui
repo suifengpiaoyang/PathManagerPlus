@@ -142,6 +142,7 @@
    </attribute>
    <addaction name="addAction"/>
    <addaction name="deleteAction"/>
+   <addaction name="configAction"/>
    <addaction name="saveAction"/>
   </widget>
   <widget class="QMenuBar" name="menuBar">

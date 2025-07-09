@@ -204,6 +204,8 @@ class MainWindow(QMainWindow):
             self.ui.addAction.setIcon(QIcon(ADD_ICON_PATH))
         if os.path.exists(DELETE_ICON_PATH):
             self.ui.deleteAction.setIcon(QIcon(DELETE_ICON_PATH))
+        if os.path.exists(SETTINGS_ICON_PATH):
+            self.ui.configAction.setIcon(QIcon(SETTINGS_ICON_PATH))
 
         # data init
         if not os.path.exists(DATABASE):
