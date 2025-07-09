@@ -83,9 +83,19 @@ class CustomQListWidget(QListWidget):
             event.ignore()
 
     def keyPressEvent(self, event):
+        current_row = self.currentRow()
+        count = self.count()
         if event.key() == Qt.Key_Up:
+            if current_row == 0:
+                self.setCurrentRow(count - 1)
+                self.listKeyPressSignal.emit('up')
+                return
             self.listKeyPressSignal.emit('up')
         elif event.key() == Qt.Key_Down:
+            if current_row == count - 1:
+                self.setCurrentRow(0)
+                self.listKeyPressSignal.emit('down')
+                return
             self.listKeyPressSignal.emit('down')
         elif event.key() == Qt.Key_Left:
             self.listKeyPressSignal.emit('left')
@@ -97,6 +107,7 @@ class CustomQTreeWidget(QTreeWidget):
     internalItemDropFinished = Signal(dict)
     updateListValue = Signal(QTreeWidgetItem)
     listItemsDroppedOnTreeItem = Signal(dict)
+    treeKeyPressSignal = Signal(str)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -229,6 +240,23 @@ class CustomQTreeWidget(QTreeWidget):
             # 文件和文件夹等拖拽到树控件上。处理方式基本和拖拽到列表
             # 控件上相同。
             self.handleFileDrop(event)
+
+    def keyPressEvent(self, event):
+        item = self.currentItem()
+        if event.key() == Qt.Key_Right:
+            item = self.currentItem()
+            if self.isItemExpanded(item):
+                self.treeKeyPressSignal.emit('right')
+            else:
+                self.expandItem(item)
+            event.accept()
+            return
+        elif event.key() == Qt.Key_Left:
+            if item and self.isItemExpanded(item):
+                self.collapseItem(item)
+                event.accept()
+                return
+        super().keyPressEvent(event)
 
 
 class CustomQTextEdit(QTextEdit):

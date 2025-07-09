@@ -251,6 +251,19 @@ class MainWindow(QMainWindow):
         self.ui.treeWidget.listItemsDroppedOnTreeItem.connect(
             self.handle_list_drop)
         self.ui.listWidget.listKeyPressSignal.connect(self.list_key_press)
+        self.ui.treeWidget.treeKeyPressSignal.connect(self.tree_key_press)
+        self.ui.treeWidget.currentItemChanged.connect(self.tree_item_change)
+
+    def tree_item_change(self, current, previous):
+        self.tree_item_click(current)
+
+    def tree_key_press(self, key):
+        if key == 'right':
+            if self.ui.listWidget.count() > 0:
+                self.ui.listWidget.setFocus()
+                item = self.ui.listWidget.currentItem()
+                self.ui.listWidget.setCurrentItem(item)
+                self.listwidget_left_click(item)
 
     def list_key_press(self, key):
         if key in ('up', 'down'):
@@ -284,7 +297,7 @@ class MainWindow(QMainWindow):
         node_id = node.data(0, Qt.UserRole)
         item_id = self.data.add_item(payload, node_id)
         # 更新 listWidget 的 UI
-        self.tree_item_click(node)
+        # self.tree_item_click(node)
         row_count = self.ui.listWidget.count()
         last_item = self.ui.listWidget.item(row_count - 1)
         last_item_id = last_item.data(Qt.UserRole)
@@ -469,7 +482,7 @@ class MainWindow(QMainWindow):
             self.ui.treeWidget.setFocus()
             item.setSelected(True)
             item.setExpanded(True)
-            self.tree_item_click(item, 0)
+            # self.tree_item_click(item, 0)
 
     def render_node(self, node_id):
         node = self.data['nodes'][node_id]
@@ -639,7 +652,7 @@ class MainWindow(QMainWindow):
 
     def show_tree_context_menu(self, position):
         item = self.ui.treeWidget.currentItem()
-        self.tree_item_click(item, 0)
+        # self.tree_item_click(item, 0)
 
         add_node = QAction('添加节点')
         add_sub_node = QAction('添加字节点')
@@ -681,7 +694,7 @@ class MainWindow(QMainWindow):
         item.setData(0, Qt.UserRole, new_node_id)
         self.ui.treeWidget.setFocus()
         self.ui.treeWidget.setCurrentItem(item)
-        self.tree_item_click(item)
+        # self.tree_item_click(item)
         self.set_has_edited(True)
 
     def add_sub_node(self):
@@ -701,7 +714,7 @@ class MainWindow(QMainWindow):
         item.setData(0, Qt.UserRole, new_node_id)
         self.ui.treeWidget.setFocus()
         self.ui.treeWidget.setCurrentItem(item)
-        self.tree_item_click(item)
+        # self.tree_item_click(item)
         self.set_has_edited(True)
 
     def edit_node_name(self):
@@ -748,8 +761,8 @@ class MainWindow(QMainWindow):
         node = self.ui.treeWidget.currentItem()
         if not node:
             self.ui.listWidget.clear()
-        else:
-            self.tree_item_click(node)
+        # else:
+        #     self.tree_item_click(node)
         self.set_has_edited(True)
 
     def open_with_editor(self, flag):
