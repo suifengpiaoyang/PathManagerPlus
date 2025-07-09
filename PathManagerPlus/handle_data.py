@@ -298,10 +298,9 @@ class DataStorage(dict):
 def gen_base_data():
     d = DataStorage()
     node = d.add_node('常规')
-    d.add_node('文件', node)
-    d.add_node('文件夹', node)
     d.add_node('程序', node)
     d.add_node('链接', node)
+    d.add_node('其他', node)
     return d
 
 
