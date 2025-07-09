@@ -774,7 +774,7 @@ class MainWindow(QMainWindow):
             QMessageBox.about(
                 self,
                 '提示',
-                '请先在[首选项]里面配置代码编辑器路径。'
+                '请先在[选项>配置]里面配置代码编辑器路径。'
             )
             return
         if not os.path.exists(editor_path):

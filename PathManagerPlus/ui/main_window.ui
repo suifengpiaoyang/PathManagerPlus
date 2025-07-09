@@ -153,13 +153,23 @@
      <height>23</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu">
+   <widget class="QMenu" name="menuOption">
     <property name="title">
-     <string>首选项</string>
+     <string>选项(&amp;O)</string>
     </property>
     <addaction name="configAction"/>
    </widget>
-   <addaction name="menu"/>
+   <widget class="QMenu" name="menuPath">
+    <property name="title">
+     <string>路径(&amp;P)</string>
+    </property>
+    <addaction name="addAction"/>
+    <addaction name="deleteAction"/>
+    <addaction name="separator"/>
+    <addaction name="saveAction"/>
+   </widget>
+   <addaction name="menuPath"/>
+   <addaction name="menuOption"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="configAction">
