@@ -51,6 +51,12 @@ else:
     # 这里要不要保存是一个问题
 
 
+def load_qss(font_family='Microsoft YaHei UI'):
+    with open(STYLE_FILE, 'r', encoding='utf-8')as fl:
+        qss = fl.read().format(font_family=font_family)
+    return qss
+
+
 class ConfigForm(QWidget):
 
     update_config = Signal(JsonDb)
@@ -870,9 +876,14 @@ class MainWindow(QMainWindow):
 def main():
 
     app = QApplication(sys.argv)
-    font = QFont()
-    font.setPointSize(13)  # 设置字体大小
-    app.setFont(font)
+    # 统一字体家族
+    font_family = config.get('font_family')
+    if font_family is None:
+        font_family = 'Microsoft YaHei UI'
+        config['font_family'] = font_family
+        config.to_json(CONFIG_FILE)
+    qss = load_qss(font_family)
+    app.setStyleSheet(qss)
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())

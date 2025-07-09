@@ -1,0 +1,23 @@
+QMenuBar {{
+    font-family: '{font_family}';
+    font-size: 10pt;
+}}
+QMenu {{
+    font-family: '{font_family}';
+    font-size: 9pt;
+}}
+QTreeWidget {{
+    font-family: '{font_family}';
+    font-size: 12pt;
+}}
+QLabel,
+QPushButton,
+QListWidget,
+QCheckBox,
+QGroupBox,
+QLineEdit,
+QTextEdit,
+QPlainTextEdit {{
+    font-family: '{font_family}';
+    font-size: 13pt;
+}}
