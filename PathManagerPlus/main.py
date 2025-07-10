@@ -471,8 +471,7 @@ class MainWindow(QMainWindow):
         item = self.ui.listWidget.currentItem()
         if not item:
             return
-        item_id = item.data(Qt.UserRole)
-        item_data = self.data['items'][item_id]
+        item_data = self.get_listwidget_item_data(item)
         name = self.ui.lineEditName.text()
         if name == item_data['name']:
             return
@@ -556,24 +555,36 @@ class MainWindow(QMainWindow):
             item = self.ui.listWidget.currentItem()
             if item is None:
                 return
-        item_id = item.data(Qt.UserRole)
-        item_data = self.data['items'][item_id]
+        item_data = self.get_listwidget_item_data(item)
         self.ui.lineEditName.setText(item_data['name'])
         self.ui.textEditPath.insertPlainText(item_data['path'])
         self.ui.textEditComment.insertPlainText(item_data['comment'])
 
     def double_click_event(self):
-        self.open_selected_file()
+        self.open_selected_files()
 
-    def get_selected_path(self):
-        item = self.ui.listWidget.currentItem()
+    def get_listwidget_selected_items(self):
+        items = self.ui.listWidget.selectedItems()
+        if not items:
+            return
+        if len(items) > 5:
+            QMessageBox.about(
+                self,
+                '提示',
+                '当前最大允许同时进行任务数是5个！'
+            )
+            return
+        return items
+
+    def get_listwidget_item_data(self, item):
         item_id = item.data(Qt.UserRole)
         item_data = self.data['items'][item_id]
-        path = item_data['path']
-        return path
+        return item_data
 
-    def open_selected_file(self):
-        path = self.get_selected_path()
+    def handle_open_file(self, path):
+        """
+        处理打开单个文件，附带 UI 反馈
+        """
         if not path:
             return
         if path.startswith('http'):
@@ -585,8 +596,7 @@ class MainWindow(QMainWindow):
         else:
             QMessageBox.critical(self, '错误', f'找不到目标路径：{path}')
 
-    def handle_selected_directory(self, action_type):
-        path = self.get_selected_path()
+    def handle_directory(self, path, action_type):
         if not path:
             return
         if os.path.isdir(path):
@@ -606,20 +616,55 @@ class MainWindow(QMainWindow):
         else:
             QMessageBox.critical(self, '错误', f'找不到目标路径：{path}')
 
-    def open_selected_directory(self):
-        self.handle_selected_directory('open_directory')
+    def handle_open_directory(self, path):
+        return self.handle_directory(path, 'open_directory')
 
-    def open_console_window(self):
-        self.handle_selected_directory('open_console')
+    def handle_open_console(self, path):
+        return self.handle_directory(path, 'open_console')
 
-    def locate_file(self):
-        path = self.get_selected_path()
+    def open_selected_files(self):
+        items = self.get_listwidget_selected_items()
+        if not items:
+            return
+        for item in items:
+            item_data = self.get_listwidget_item_data(item)
+            path = item_data['path']
+            self.handle_open_file(path)
+
+    def open_selected_directories(self):
+        items = self.get_listwidget_selected_items()
+        if not items:
+            return
+        for item in items:
+            item_data = self.get_listwidget_item_data(item)
+            path = item_data['path']
+            self.handle_open_directory(path)
+
+    def open_console_windows(self):
+        items = self.get_listwidget_selected_items()
+        if not items:
+            return
+        for item in items:
+            item_data = self.get_listwidget_item_data(item)
+            path = item_data['path']
+            self.handle_open_console(path)
+
+    def handle_locate_file(self, path):
         if not path:
             return
         if not os.path.exists(path):
             QMessageBox.critical(self, '错误', f'找不到该文件：{path}')
             return
         system_actions.locate_file(path)
+
+    def locate_files(self):
+        items = self.get_listwidget_selected_items()
+        if not items:
+            return
+        for item in items:
+            item_data = self.get_listwidget_item_data(item)
+            path = item_data['path']
+            self.handle_locate_file(path)
 
     def delete_items(self):
         """输出列表控件的项
@@ -673,14 +718,14 @@ class MainWindow(QMainWindow):
         open_selected_file = QAction('打开目标文件(同双击)')
         delete_items = QAction('删除')
 
-        open_selected_path.triggered.connect(self.open_selected_directory)
-        open_console_window.triggered.connect(self.open_console_window)
+        open_selected_path.triggered.connect(self.open_selected_directories)
+        open_console_window.triggered.connect(self.open_console_windows)
         open_file_with_editor.triggered.connect(
             lambda: self.open_with_editor(flag='file'))
         open_path_with_editor.triggered.connect(
             lambda: self.open_with_editor(flag='path'))
-        locate_file.triggered.connect(self.locate_file)
-        open_selected_file.triggered.connect(self.open_selected_file)
+        locate_file.triggered.connect(self.locate_files)
+        open_selected_file.triggered.connect(self.open_selected_files)
         delete_items.triggered.connect(self.delete_items)
 
         menu = QMenu(self.ui.listWidget)
@@ -828,8 +873,7 @@ class MainWindow(QMainWindow):
         item = self.ui.listWidget.currentItem()
         if item is None:
             return
-        item_id = item.data(Qt.UserRole)
-        item_data = self.data['items'][item_id]
+        item_data = self.get_listwidget_item_data(item)
         path = item_data['path']
         if not path:
             QMessageBox.critical(self, '错误', '路径不能为空值！')
