@@ -99,6 +99,8 @@ class CustomQListWidget(QListWidget):
             self.listKeyPressSignal.emit('down')
         elif event.key() == Qt.Key_Left:
             self.listKeyPressSignal.emit('left')
+        elif event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            self.listKeyPressSignal.emit('enter')
         super().keyPressEvent(event)
 
 

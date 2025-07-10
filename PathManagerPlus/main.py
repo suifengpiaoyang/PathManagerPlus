@@ -294,6 +294,8 @@ class MainWindow(QMainWindow):
             self.listwidget_left_click(item)
         elif key == 'left':
             self.ui.treeWidget.setFocus()
+        elif key == 'enter':
+            self.double_click_event()
         else:
             pass
 
