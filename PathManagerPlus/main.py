@@ -487,10 +487,16 @@ class MainWindow(QMainWindow):
         self.config_form.update_config.connect(self.update_config)
         self.config_form.exec_()
 
-    def update_config(self, _config):
-        config.update(_config)
+    def update_config(self, payload):
+        config.update(payload)
         config.to_json(CONFIG_FILE)
         # 这里可能后续还需要有修改字体后更新窗体渲染的代码
+        # 支持部分配置功能实时更新
+        if 'hide_toolbar' in payload:
+            if payload['hide_toolbar']:
+                self.ui.toolBar.hide()
+            else:
+                self.ui.toolBar.show()
 
     def add_context_menu(self):
         self.ui.listWidget.setContextMenuPolicy(Qt.CustomContextMenu)
