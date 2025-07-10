@@ -20,7 +20,8 @@ from PySide2.QtWidgets import (
     QMenu,
     QWidget,
     QFileDialog,
-    QInputDialog
+    QInputDialog,
+    QDialog
 )
 from PySide2.QtCore import Qt, Signal
 from .ui.main_window import Ui_MainWindow
@@ -57,14 +58,20 @@ def load_qss(font_family='Microsoft YaHei UI'):
     return qss
 
 
-class ConfigForm(QWidget):
+class ConfigForm(QDialog):
 
     update_config = Signal(JsonDb)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.ui = Ui_ConfigForm()
         self.ui.setupUi(self)
+        self.setWindowFlags(
+            Qt.Window |
+            Qt.WindowMinimizeButtonHint |
+            Qt.WindowMaximizeButtonHint |
+            Qt.WindowCloseButtonHint
+        )
 
         self.has_edited = False
 
@@ -138,14 +145,20 @@ class ConfigForm(QWidget):
         self.close()
 
 
-class AddPathForm(QWidget):
+class AddPathForm(QDialog):
 
     path_data_submit = Signal(dict)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.ui = Ui_AddPathForm()
         self.ui.setupUi(self)
+        self.setWindowFlags(
+            Qt.Window |
+            Qt.WindowMinimizeButtonHint |
+            Qt.WindowMaximizeButtonHint |
+            Qt.WindowCloseButtonHint
+        )
 
         # set gui icon
         if os.path.exists(ADD_ICON_PATH):
@@ -294,7 +307,7 @@ class MainWindow(QMainWindow):
                 '当前没有选中节点，你需要选中一个节点后才能使用该功能。'
             )
             return
-        self.add_path_form = AddPathForm()
+        self.add_path_form = AddPathForm(self)
         self.add_path_form.path_data_submit.connect(
             self.handle_path_data_submit
         )
@@ -307,10 +320,10 @@ class MainWindow(QMainWindow):
         node_id = node.data(0, Qt.UserRole)
         item_id = self.data.add_item(payload, node_id)
         # 更新 listWidget 的 UI
-        # self.tree_item_click(node)
+        self.tree_item_click(node)
         row_count = self.ui.listWidget.count()
         last_item = self.ui.listWidget.item(row_count - 1)
-        last_item_id = last_item.data(Qt.UserRole)
+        # last_item_id = last_item.data(Qt.UserRole)
         # last_item_data = self.data['items'][last_item_id]
         # print(last_item_data)
         self.ui.listWidget.setFocus()
@@ -459,9 +472,9 @@ class MainWindow(QMainWindow):
         self.set_has_edited(True)
 
     def open_config_form(self):
-        self.config_form = ConfigForm()
+        self.config_form = ConfigForm(self)
         self.config_form.update_config.connect(self.update_config)
-        self.config_form.show()
+        self.config_form.exec_()
 
     def update_config(self, _config):
         config.update(_config)
