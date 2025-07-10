@@ -13,4 +13,3 @@ SAVE_ICON_PATH = os.path.join(STATIC_PATH, 'save.ico')
 ADD_ICON_PATH = os.path.join(STATIC_PATH, 'add.ico')
 DELETE_ICON_PATH = os.path.join(STATIC_PATH, 'delete.ico')
 SETTINGS_ICON_PATH = os.path.join(STATIC_PATH, 'settings.ico')
-

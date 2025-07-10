@@ -620,8 +620,13 @@ class MainWindow(QMainWindow):
             self.ui.listWidget.takeItem(row)    # 处理UI界面
             item_id = item.data(Qt.UserRole)
             self.data.remove_item(item_id)      # 处理数据删除
-        # 实际上看这行似乎并不需要
-        # self.listwidget_left_click()
+        count = self.ui.listWidget.count()
+        if count > 0:
+            current_item = self.ui.listWidget.currentItem()
+            self.ui.listWidget.setCurrentItem(current_item)
+            self.listwidget_left_click(current_item)
+        elif count == 0:
+            self.clear_input_widgets()
         self.set_has_edited(True)
 
     def clear_input_widgets(self):
