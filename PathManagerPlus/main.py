@@ -48,8 +48,17 @@ elif system == "Darwin":
 if os.path.exists(CONFIG_FILE):
     config = JsonDb.from_json(CONFIG_FILE)
 else:
-    config = JsonDb({})
-    # 这里要不要保存是一个问题
+    config = JsonDb(
+        {
+            "editor_path": None,
+            "editor_name": None,
+            "maximize_window_on_startup": False,
+            "expand_tree_on_startup": False,
+            "hide_toolbar": False,
+            "font_family": "Microsoft YaHei UI"
+        }
+    )
+    config.to_json(CONFIG_FILE)
 
 
 def load_qss(font_family='Microsoft YaHei UI'):
