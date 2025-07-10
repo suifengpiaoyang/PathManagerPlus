@@ -856,6 +856,15 @@ class MainWindow(QMainWindow):
         self.set_has_edited(True)
 
     def open_with_editor(self, flag):
+        items = self.get_listwidget_selected_items()
+        if not items:
+            return
+        for item in items:
+            item_data = self.get_listwidget_item_data(item)
+            path = item_data['path']
+            self.handle_open_with_editor(path, flag)
+
+    def handle_open_with_editor(self, path, flag):
         if flag not in ('file', 'path'):
             print('flag 必须为 file 或者 path')
             return
@@ -870,20 +879,18 @@ class MainWindow(QMainWindow):
         if not os.path.exists(editor_path):
             QMessageBox.critical(self, '错误', f'[{editor_path}]不存在！')
             return
-        item = self.ui.listWidget.currentItem()
-        if item is None:
-            return
-        item_data = self.get_listwidget_item_data(item)
-        path = item_data['path']
         if not path:
-            QMessageBox.critical(self, '错误', '路径不能为空值！')
             return
         if not os.path.exists(path):
             QMessageBox.critical(self, '错误', f'找不到[{path}]！')
             return
         if flag == 'file':
             if os.path.isdir(path):
-                QMessageBox.critical(self, '错误', '目标是一个文件夹！')
+                QMessageBox.critical(
+                    self,
+                    '错误',
+                    f'无法通过打开文件的方式打开文件夹！[{path}]'
+                )
                 return
             target = path
         elif flag == 'path':
