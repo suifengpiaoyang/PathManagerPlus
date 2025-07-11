@@ -215,7 +215,6 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-
         self.ui.splitter.setSizes([200, 600])
 
         self.BASE_WINDOW_TITLE = self.windowTitle()
@@ -260,6 +259,9 @@ class MainWindow(QMainWindow):
 
         # add right click menu
         self.add_context_menu()
+        # 初始化右键弹出菜单
+        self.init_listwidget_context_menu()
+        self.init_treewidget_context_menu()
 
         # handle slots
         self.ui.saveAction.triggered.connect(self.save)
@@ -285,6 +287,57 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.listKeyPressSignal.connect(self.list_key_press)
         self.ui.treeWidget.treeKeyPressSignal.connect(self.tree_key_press)
         self.ui.treeWidget.currentItemChanged.connect(self.tree_item_change)
+
+    def init_listwidget_context_menu(self):
+        self.action_open_selected_path = QAction('打开目标路径')
+        self.action_open_console_window = QAction('打开console窗口')
+        self.action_open_file_with_editor = QAction()
+        self.action_open_path_with_editor = QAction()
+        self.action_locate_file = QAction('定位文件')
+        self.action_open_selected_file = QAction('打开目标文件(同双击)')
+        self.action_delete_items = QAction('删除')
+
+        self.action_open_selected_path.triggered.connect(
+            self.open_selected_directories)
+        self.action_open_console_window.triggered.connect(
+            self.open_console_windows)
+        self.action_open_file_with_editor.triggered.connect(
+            lambda: self.open_with_editor(flag='file'))
+        self.action_open_path_with_editor.triggered.connect(
+            lambda: self.open_with_editor(flag='path'))
+        self.action_locate_file.triggered.connect(self.locate_files)
+        self.action_open_selected_file.triggered.connect(
+            self.open_selected_files)
+        self.action_delete_items.triggered.connect(self.delete_items)
+
+        self.listwidget_menu = QMenu(self.ui.listWidget)
+        self.listwidget_menu.addAction(self.action_locate_file)
+        self.listwidget_menu.addAction(self.action_open_selected_path)
+        self.listwidget_menu.addAction(self.action_open_console_window)
+        self.listwidget_menu.addSeparator()
+        self.listwidget_menu.addAction(self.action_open_file_with_editor)
+        self.listwidget_menu.addAction(self.action_open_path_with_editor)
+        self.listwidget_menu.addSeparator()
+        self.listwidget_menu.addAction(self.action_delete_items)
+        self.listwidget_menu.addAction(self.action_open_selected_file)
+
+    def init_treewidget_context_menu(self):
+        self.action_add_node = QAction('添加节点')
+        self.action_add_sub_node = QAction('添加字节点')
+        self.action_edit_node_name = QAction('修改节点名称')
+        self.action_delete_node = QAction('删除节点')
+
+        self.action_add_node.triggered.connect(self.add_node)
+        self.action_add_sub_node.triggered.connect(self.add_sub_node)
+        self.action_edit_node_name.triggered.connect(self.edit_node_name)
+        self.action_delete_node.triggered.connect(self.delete_node)
+
+        self.treewidget_menu = QMenu(self.ui.treeWidget)
+        self.treewidget_menu.addAction(self.action_add_node)
+        self.treewidget_menu.addAction(self.action_add_sub_node)
+        self.treewidget_menu.addAction(self.action_edit_node_name)
+        self.treewidget_menu.addSeparator()
+        self.treewidget_menu.addAction(self.action_delete_node)
 
     def tree_item_change(self, current, previous):
         self.tree_item_click(current)
@@ -706,65 +759,27 @@ class MainWindow(QMainWindow):
             return
 
         editor_name = config.get('editor_name', '代码编辑器')
-        editor_path = config.get('editor_path')
 
         # 右键点击时顺带触发了一次左键选中更新信息。
         self.listwidget_left_click()
-        open_selected_path = QAction('打开目标路径')
-        open_console_window = QAction('打开console窗口')
-        open_file_with_editor = QAction(f'使用{editor_name}打开文件')
-        open_path_with_editor = QAction(f'使用{editor_name}打开文件夹')
-        locate_file = QAction('定位文件')
-        open_selected_file = QAction('打开目标文件(同双击)')
-        delete_items = QAction('删除')
 
-        open_selected_path.triggered.connect(self.open_selected_directories)
-        open_console_window.triggered.connect(self.open_console_windows)
-        open_file_with_editor.triggered.connect(
-            lambda: self.open_with_editor(flag='file'))
-        open_path_with_editor.triggered.connect(
-            lambda: self.open_with_editor(flag='path'))
-        locate_file.triggered.connect(self.locate_files)
-        open_selected_file.triggered.connect(self.open_selected_files)
-        delete_items.triggered.connect(self.delete_items)
-
-        menu = QMenu(self.ui.listWidget)
-        menu.addAction(locate_file)
-        menu.addAction(open_selected_path)
-        menu.addAction(open_console_window)
-        menu.addSeparator()
-        menu.addAction(open_file_with_editor)
-        menu.addAction(open_path_with_editor)
-        menu.addSeparator()
-        menu.addAction(delete_items)
-        menu.addAction(open_selected_file)
-        menu.exec_(self.ui.listWidget.mapToGlobal(position))
+        self.action_open_file_with_editor.setText(
+            f"使用 {editor_name} 打开文件")
+        self.action_open_path_with_editor.setText(
+            f"使用 {editor_name} 打开文件夹")
+        self.listwidget_menu.exec_(
+            self.ui.listWidget.mapToGlobal(position))
 
     def show_tree_context_menu(self, position):
-        item = self.ui.treeWidget.currentItem()
+        # item = self.ui.treeWidget.currentItem()
         # self.tree_item_click(item, 0)
-
-        add_node = QAction('添加节点')
-        add_sub_node = QAction('添加字节点')
-        edit_node_name = QAction('修改节点名称')
-        delete_node = QAction('删除节点')
-
-        add_node.triggered.connect(self.add_node)
-        add_sub_node.triggered.connect(self.add_sub_node)
-        edit_node_name.triggered.connect(self.edit_node_name)
-        delete_node.triggered.connect(self.delete_node)
-
-        menu = QMenu(self.ui.treeWidget)
-        menu.addAction(add_node)
-        menu.addAction(add_sub_node)
-        menu.addAction(edit_node_name)
-        menu.addSeparator()
-        menu.addAction(delete_node)
-
-        menu.exec_(self.ui.treeWidget.mapToGlobal(position))
+        self.treewidget_menu.exec_(
+            self.ui.treeWidget.mapToGlobal(position))
 
     def add_node(self):
-        name, ok = QInputDialog.getText(self, "请输入节点名称", "节点名称：")
+        name, ok = QInputDialog.getText(
+            self, "请输入节点名称", "节点名称："
+        )
         if not ok:
             return
 
@@ -788,7 +803,9 @@ class MainWindow(QMainWindow):
         self.set_has_edited(True)
 
     def add_sub_node(self):
-        name, ok = QInputDialog.getText(self, "请输入子节点名称", "子节点名称：")
+        name, ok = QInputDialog.getText(
+            self, "请输入子节点名称", "子节点名称："
+        )
         if not ok:
             return
 
