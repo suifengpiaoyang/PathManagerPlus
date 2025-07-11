@@ -54,16 +54,15 @@ else:
             "editor_name": None,
             "maximize_window_on_startup": False,
             "expand_tree_on_startup": False,
-            "hide_toolbar": False,
-            "font_family": "Microsoft YaHei UI"
+            "hide_toolbar": False
         }
     )
     config.to_json(CONFIG_FILE)
 
 
-def load_qss(font_family='Microsoft YaHei UI'):
+def load_qss():
     with open(STYLE_FILE, 'r', encoding='utf-8')as fl:
-        qss = fl.read().format(font_family=font_family)
+        qss = fl.read()
     return qss
 
 
@@ -981,14 +980,7 @@ class MainWindow(QMainWindow):
 def main():
 
     app = QApplication(sys.argv)
-    # 统一字体家族
-    font_family = config.get('font_family')
-    if font_family is None:
-        font_family = 'Microsoft YaHei UI'
-        config['font_family'] = font_family
-        config.to_json(CONFIG_FILE)
-    qss = load_qss(font_family)
-    app.setStyleSheet(qss)
+    app.setStyleSheet(load_qss())
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())

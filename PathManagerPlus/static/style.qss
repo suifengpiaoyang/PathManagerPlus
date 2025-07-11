@@ -1,15 +1,18 @@
-QMenuBar {{
-    font-family: '{font_family}';
-    font-size: 10pt;
-}}
-QMenu {{
-    font-family: '{font_family}';
-    font-size: 9pt;
-}}
-QTreeWidget {{
-    font-family: '{font_family}';
-    font-size: 12pt;
-}}
+QMenuBar {
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Segoe UI", Arial, sans-serif;
+  font-size: 10pt;
+}
+
+QMenu {
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Segoe UI", Arial, sans-serif;
+  font-size: 9pt;
+}
+
+QTreeWidget {
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Segoe UI", Arial, sans-serif;
+  font-size: 12pt;
+}
+
 QLabel,
 QPushButton,
 QListWidget,
@@ -17,7 +20,7 @@ QCheckBox,
 QGroupBox,
 QLineEdit,
 QTextEdit,
-QPlainTextEdit {{
-    font-family: '{font_family}';
-    font-size: 13pt;
-}}
+QPlainTextEdit {
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Segoe UI", Arial, sans-serif;
+  font-size: 13pt;
+}
