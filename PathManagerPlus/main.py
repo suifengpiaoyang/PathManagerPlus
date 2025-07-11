@@ -758,16 +758,15 @@ class MainWindow(QMainWindow):
             return
 
         editor_name = config.get('editor_name', '代码编辑器')
-
-        # 右键点击时顺带触发了一次左键选中更新信息。
-        self.listwidget_left_click()
-
         self.action_open_file_with_editor.setText(
             f"使用 {editor_name} 打开文件")
         self.action_open_path_with_editor.setText(
             f"使用 {editor_name} 打开文件夹")
         self.listwidget_menu.exec_(
             self.ui.listWidget.mapToGlobal(position))
+
+        # 右键点击时顺带触发了一次左键选中更新信息。
+        self.listwidget_left_click()
 
     def show_tree_context_menu(self, position):
         # item = self.ui.treeWidget.currentItem()
