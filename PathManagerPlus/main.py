@@ -339,6 +339,8 @@ class MainWindow(QMainWindow):
         self.treewidget_menu.addAction(self.action_delete_node)
 
     def tree_item_change(self, current, previous):
+        if current is None:
+            return
         self.tree_item_click(current)
 
     def tree_key_press(self, key):
@@ -591,6 +593,8 @@ class MainWindow(QMainWindow):
             self.render_node(_node_id)
 
     def tree_item_click(self, item, column=0):
+        if item is None:
+            return
         node_id = item.data(0, Qt.UserRole)
         name = item.text(0)
         self.ui.listWidget.clear()
@@ -784,9 +788,14 @@ class MainWindow(QMainWindow):
 
         # 数据层面处理
         node = self.ui.treeWidget.currentItem()
-        hover_node_id = node.data(0, Qt.UserRole)
-        hover_node = self.data['nodes'][hover_node_id]
-        parent_id = hover_node['parent_id']
+        # 当所有节点都删除时，当前项将会变成 None
+        if node is None:
+            parent_id = 'root'
+        else:
+            hover_node_id = node.data(0, Qt.UserRole)
+            hover_node = self.data['nodes'][hover_node_id]
+            parent_id = hover_node['parent_id']
+        # 调用 api 添加数据
         new_node_id = self.data.add_node(name, parent_id)
 
         # UI 层面处理
