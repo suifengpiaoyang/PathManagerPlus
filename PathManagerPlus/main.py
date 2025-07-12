@@ -278,7 +278,7 @@ class MainWindow(QMainWindow):
         self.label_center = QLabel()
         self.ui.statusBar.addWidget(self.label_center)
         self.label_center.setFixedWidth(400)
-        self.update_statusbar()
+        self.update_statusbar_left()
 
         # handle slots
         self.ui.saveAction.triggered.connect(self.save)
@@ -305,23 +305,49 @@ class MainWindow(QMainWindow):
         self.ui.treeWidget.treeKeyPressSignal.connect(self.tree_key_press)
         self.ui.treeWidget.currentItemChanged.connect(self.tree_item_change)
 
+        self.search_node = None
         self.search_box.setFocus()
 
-    def update_statusbar(self):
+    def update_statusbar_left(self):
         node_count = self.data.node_count() - 1
         item_count = self.data.item_count()
         self.label_left.setText(f'总共：{node_count}节点，{item_count}记录')
+
+    def _format_data(self, data):
+        return data if data is not None else ''
 
     def handle_search(self):
         text = self.search_box.text().strip()
         if len(text) == 0:
             return
+
+        # ui 层面
         self.clear_input_widgets()
         self.ui.listWidget.clear()
-        item = QTreeWidgetItem(self.ui.treeWidget)
-        item.setText(0, '搜索结果')
-        self.tree_item_click(item)
-        self.ui.treeWidget.setCurrentItem(item)
+        if self.search_node is None:
+            self.search_node = QTreeWidgetItem(self.ui.treeWidget)
+            self.search_node.setText(0, '搜索结果')
+            self.ui.treeWidget.setCurrentItem(self.search_node)
+        result_count = 0
+
+        # 不区分大小写搜索 name, path, comment
+        # 这里的部分后续如果要增强搜索功能，比如正则表达式之类的，
+        # 需要在这里进行接口改变。
+        text = text.lower()
+        for item_id in self.data['items']:
+            item_data = self.data['items'][item_id]
+            name = self._format_data(item_data.get('name'))
+            path = self._format_data(item_data.get('path'))
+            comment = self._format_data(item_data.get('comment'))
+            if text in name.lower() \
+                or text in path.lower()\
+                    or text in comment.lower():
+                item = QListWidgetItem(name)
+                item.setData(Qt.UserRole, item_id)
+                self.ui.listWidget.addItem(item)
+                result_count += 1
+        # 更新状态栏
+        self.label_center.setText(f'搜索结果：{result_count}')
 
     def init_listwidget_context_menu(self):
         self.action_open_selected_path = QAction('打开目标路径')
@@ -377,6 +403,12 @@ class MainWindow(QMainWindow):
     def tree_item_change(self, current, previous):
         if current is None:
             return
+        if self.search_node is not None and previous == self.search_node:
+            index = self.ui.treeWidget.indexOfTopLevelItem(self.search_node)
+            self.ui.treeWidget.takeTopLevelItem(index)
+            self.search_node = None
+            # 更新状态栏
+            self.label_center.setText('')
         self.tree_item_click(current)
 
     def tree_key_press(self, key):
@@ -848,7 +880,7 @@ class MainWindow(QMainWindow):
         self.ui.treeWidget.setCurrentItem(item)
         # self.tree_item_click(item)
         self.set_has_edited(True)
-        self.update_statusbar()
+        self.update_statusbar_left()
 
     def add_sub_node(self):
         name, ok = QInputDialog.getText(
@@ -871,7 +903,7 @@ class MainWindow(QMainWindow):
         self.ui.treeWidget.setCurrentItem(item)
         # self.tree_item_click(item)
         self.set_has_edited(True)
-        self.update_statusbar()
+        self.update_statusbar_left()
 
     def edit_node_name(self):
         node = self.ui.treeWidget.currentItem()
@@ -920,7 +952,7 @@ class MainWindow(QMainWindow):
         # else:
         #     self.tree_item_click(node)
         self.set_has_edited(True)
-        self.update_statusbar()
+        self.update_statusbar_left()
 
     def open_with_editor(self, flag):
         items = self.get_listwidget_selected_items()
