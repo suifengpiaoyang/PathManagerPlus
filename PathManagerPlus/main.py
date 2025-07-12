@@ -22,7 +22,8 @@ from PySide2.QtWidgets import (
     QFileDialog,
     QInputDialog,
     QDialog,
-    QLineEdit
+    QLineEdit,
+    QLabel
 )
 from PySide2.QtCore import Qt, Signal
 from .ui.main_window import Ui_MainWindow
@@ -220,14 +221,10 @@ class MainWindow(QMainWindow):
         self.BASE_WINDOW_TITLE = self.windowTitle()
         self.has_edited = False
 
-        # 临时隐藏掉工具栏和状态栏
-        # self.ui.toolBar.hide()
-        # self.ui.statusBar.hide()
-
         # 添加 QLineEdit 到工具栏
         self.search_box = QLineEdit()
         self.search_box.setPlaceholderText("搜索")
-        self.search_box.setMaximumWidth(200)        # 限制宽度
+        self.search_box.setMaximumWidth(200)
         self.ui.toolBar.addSeparator()
         self.ui.toolBar.addWidget(self.search_box)
         self.search_box.returnPressed.connect(self.handle_search)
@@ -271,6 +268,18 @@ class MainWindow(QMainWindow):
         self.init_listwidget_context_menu()
         self.init_treewidget_context_menu()
 
+        # 设置状态栏内容
+        node_count = self.data.node_count()
+        # 左侧状态
+        self.label_left = QLabel()
+        self.ui.statusBar.addWidget(self.label_left)
+        self.label_left.setFixedWidth(400)
+        # 中间状态
+        self.label_center = QLabel()
+        self.ui.statusBar.addWidget(self.label_center)
+        self.label_center.setFixedWidth(400)
+        self.update_statusbar()
+
         # handle slots
         self.ui.saveAction.triggered.connect(self.save)
         self.ui.addAction.triggered.connect(self.show_add_path_form)
@@ -297,6 +306,11 @@ class MainWindow(QMainWindow):
         self.ui.treeWidget.currentItemChanged.connect(self.tree_item_change)
 
         self.search_box.setFocus()
+
+    def update_statusbar(self):
+        node_count = self.data.node_count() - 1
+        item_count = self.data.item_count()
+        self.label_left.setText(f'总共：{node_count}节点，{item_count}记录')
 
     def handle_search(self):
         text = self.search_box.text().strip()
@@ -834,6 +848,7 @@ class MainWindow(QMainWindow):
         self.ui.treeWidget.setCurrentItem(item)
         # self.tree_item_click(item)
         self.set_has_edited(True)
+        self.update_statusbar()
 
     def add_sub_node(self):
         name, ok = QInputDialog.getText(
@@ -856,6 +871,7 @@ class MainWindow(QMainWindow):
         self.ui.treeWidget.setCurrentItem(item)
         # self.tree_item_click(item)
         self.set_has_edited(True)
+        self.update_statusbar()
 
     def edit_node_name(self):
         node = self.ui.treeWidget.currentItem()
@@ -904,6 +920,7 @@ class MainWindow(QMainWindow):
         # else:
         #     self.tree_item_click(node)
         self.set_has_edited(True)
+        self.update_statusbar()
 
     def open_with_editor(self, flag):
         items = self.get_listwidget_selected_items()

@@ -294,6 +294,12 @@ class DataStorage(dict):
         if json_file is not None:
             self.to_json(json_file)
 
+    def node_count(self):
+        return len(self['nodes'])
+
+    def item_count(self):
+        return len(self['items'])
+
 
 def gen_base_data():
     d = DataStorage()
