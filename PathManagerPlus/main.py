@@ -21,7 +21,8 @@ from PySide2.QtWidgets import (
     QWidget,
     QFileDialog,
     QInputDialog,
-    QDialog
+    QDialog,
+    QLineEdit
 )
 from PySide2.QtCore import Qt, Signal
 from .ui.main_window import Ui_MainWindow
@@ -221,7 +222,15 @@ class MainWindow(QMainWindow):
 
         # 临时隐藏掉工具栏和状态栏
         # self.ui.toolBar.hide()
-        self.ui.statusBar.hide()
+        # self.ui.statusBar.hide()
+
+        # 添加 QLineEdit 到工具栏
+        self.search_box = QLineEdit()
+        self.search_box.setPlaceholderText("搜索")
+        self.search_box.setMaximumWidth(200)        # 限制宽度
+        self.ui.toolBar.addSeparator()
+        self.ui.toolBar.addWidget(self.search_box)
+        self.search_box.returnPressed.connect(self.handle_search)
 
         # set gui icon
         if os.path.exists(ICON_PATH):
@@ -286,6 +295,19 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.listKeyPressSignal.connect(self.list_key_press)
         self.ui.treeWidget.treeKeyPressSignal.connect(self.tree_key_press)
         self.ui.treeWidget.currentItemChanged.connect(self.tree_item_change)
+
+        self.search_box.setFocus()
+
+    def handle_search(self):
+        text = self.search_box.text().strip()
+        if len(text) == 0:
+            return
+        self.clear_input_widgets()
+        self.ui.listWidget.clear()
+        item = QTreeWidgetItem(self.ui.treeWidget)
+        item.setText(0, '搜索结果')
+        self.tree_item_click(item)
+        self.ui.treeWidget.setCurrentItem(item)
 
     def init_listwidget_context_menu(self):
         self.action_open_selected_path = QAction('打开目标路径')
@@ -596,6 +618,9 @@ class MainWindow(QMainWindow):
         if item is None:
             return
         node_id = item.data(0, Qt.UserRole)
+        if node_id is None:
+            # 在搜索模式中
+            return
         name = item.text(0)
         self.ui.listWidget.clear()
         self.clear_input_widgets()
