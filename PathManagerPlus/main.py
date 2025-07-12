@@ -25,7 +25,7 @@ from PySide2.QtWidgets import (
     QLineEdit,
     QLabel
 )
-from PySide2.QtCore import Qt, Signal
+from PySide2.QtCore import Qt, Signal, QTimer
 from .ui.main_window import Ui_MainWindow
 from .ui.config_form import Ui_ConfigForm
 from .ui.add_path_form import Ui_AddPathForm
@@ -340,7 +340,7 @@ class MainWindow(QMainWindow):
             (main_window_size)
         )
         self.search_node = None
-        self.search_box.setFocus()
+        QTimer.singleShot(0, self.search_box.setFocus)
 
     def update_statusbar_left(self):
         node_count = self.data.node_count() - 1
