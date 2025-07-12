@@ -29,3 +29,7 @@ QPlainTextEdit {
   font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Segoe UI", Arial, sans-serif;
   font-size: 13pt;
 }
+
+QLineEdit {
+  min-height: 35px;
+}
