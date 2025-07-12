@@ -523,7 +523,8 @@ class MainWindow(QMainWindow):
         item = self.ui.listWidget.currentItem()
         if not item:
             return
-        item_data = self.get_listwidget_item_data(item)
+        item_id = item.data(Qt.UserRole)
+        item_data = self.data['items'][item_id]
         name = self.ui.lineEditName.text()
         if name == item_data['name']:
             return
