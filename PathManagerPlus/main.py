@@ -56,7 +56,8 @@ else:
             "editor_name": None,
             "maximize_window_on_startup": False,
             "expand_tree_on_startup": False,
-            "hide_toolbar": False
+            "hide_toolbar": False,
+            "main_window_size": None
         }
     )
     config.to_json(CONFIG_FILE)
@@ -66,6 +67,32 @@ def load_qss():
     with open(STYLE_FILE, 'r', encoding='utf-8')as fl:
         qss = fl.read()
     return qss
+
+
+class MainWindowSizeControler():
+
+    def __init__(self, base_size):
+        self.base_size = base_size
+        self.size_list = [base_size]
+
+    def add_size(self, size):
+        self.size_list.append(size)
+        if len(self.size_list) > 2:
+            self.size_list = self.size_list[-2:]
+
+    def __getitem__(self, index):
+        return self.size_list[index]
+
+    def __len__(self):
+        return len(self.size_list)
+
+    def __contains__(self, item):
+        return item in self.size_list
+
+    def __str__(self):
+        return str(self.size_list)
+
+    __repr__ = __str__
 
 
 class ConfigForm(QDialog):
@@ -253,15 +280,6 @@ class MainWindow(QMainWindow):
                 self.data.fix_data(DATABASE)
         self.build_tree()
 
-        # 最大化窗口
-        if config.get('maximize_window_on_startup', False):
-            self.showMaximized()
-        # 展开所有树节点
-        if config.get('expand_tree_on_startup', False):
-            self.ui.treeWidget.expandAll()
-        if config.get('hide_toolbar', False):
-            self.ui.toolBar.hide()
-
         # add right click menu
         self.add_context_menu()
         # 初始化右键弹出菜单
@@ -277,7 +295,8 @@ class MainWindow(QMainWindow):
         # 中间状态
         self.label_center = QLabel()
         self.ui.statusBar.addWidget(self.label_center)
-        self.label_center.setFixedWidth(400)
+        # 这一行会导致无法最大化窗口？
+        # self.label_center.setFixedWidth(400)
         self.update_statusbar_left()
 
         # handle slots
@@ -305,6 +324,21 @@ class MainWindow(QMainWindow):
         self.ui.treeWidget.treeKeyPressSignal.connect(self.tree_key_press)
         self.ui.treeWidget.currentItemChanged.connect(self.tree_item_change)
 
+        # 展开所有树节点
+        if config.get('expand_tree_on_startup', False):
+            self.ui.treeWidget.expandAll()
+        if config.get('hide_toolbar', False):
+            self.ui.toolBar.hide()
+
+        main_window_size = config.get('main_window_size')
+        if main_window_size is not None:
+            self.resize(*main_window_size)
+        # 最大化窗口
+        if config.get('maximize_window_on_startup', False):
+            self.showMaximized()
+        self.size_controler = MainWindowSizeControler(
+            (main_window_size)
+        )
         self.search_node = None
         self.search_box.setFocus()
 
@@ -1033,11 +1067,41 @@ class MainWindow(QMainWindow):
         self.data.to_json(DATABASE)
         self.set_has_edited(False)
 
+    def resizeEvent(self, event):
+        """
+        这个函数无法直接简单通过判断 self.isMaximized() 是否
+        是最大化状态来选择性保存窗体大小。因为在实际测试，
+        self.isMaximized() 这个函数会产生滞后状态！
+
+        尝试了一些方式，总感觉无法获得想要的结果。思考着本来应该
+        是一件十分容易的事情才对：就是我要记录拖拽改变窗口的大小，
+        而最大化时的窗口大小改变这种形态除外。
+
+        最后，想到用一种稍微迂回的方式来实现这个功能。
+        """
+        size = (self.width(), self.height())
+        try:
+            self.size_controler.add_size(size)
+        except AttributeError:
+            # 这个函数会在 MainWindow 初始化完成之前就运行
+            pass
+        super().resizeEvent(event)
+
+    def try_to_save_window_size(self):
+        """
+        仅保存拖拽窗口之后的窗体大小。最大化不算。和原来大小一样不保存。
+        """
+        if self.isMaximized():
+            if self.size_controler[0] != self.size_controler.base_size:
+                config['main_window_size'] = self.size_controler[0]
+                config.to_json(CONFIG_FILE)
+        else:
+            if self.size_controler[-1] != self.size_controler.base_size:
+                config['main_window_size'] = self.size_controler[-1]
+                config.to_json(CONFIG_FILE)
+
     def closeEvent(self, event):
-        # 保存最后关闭时窗口的大小
-        # self.config['width'] = self.width()
-        # self.config['height'] = self.height()
-        # self.config.save(CONFIG_FILE)
+        self.try_to_save_window_size()
 
         if self.has_edited:
             flag = QMessageBox.question(
