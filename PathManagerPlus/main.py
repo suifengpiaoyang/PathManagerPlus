@@ -322,7 +322,7 @@ class MainWindow(QMainWindow):
 
     def init_treewidget_context_menu(self):
         self.action_add_node = QAction('添加节点')
-        self.action_add_sub_node = QAction('添加字节点')
+        self.action_add_sub_node = QAction('添加子节点')
         self.action_edit_node_name = QAction('修改节点名称')
         self.action_delete_node = QAction('删除节点')
 
