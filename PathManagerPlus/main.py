@@ -1137,6 +1137,8 @@ def main():
     app.setStyleSheet(load_qss())
     window = MainWindow()
     window.show()
+    os.environ.pop('QT_PLUGIN_PATH', None)
+    os.environ.pop('QML2_IMPORT_PATH', None)
     sys.exit(app.exec_())
 
 
