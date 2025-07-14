@@ -504,6 +504,7 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.setCurrentItem(last_item)
         self.listwidget_left_click(last_item)
         self.set_has_edited(True)
+        self.update_statusbar_left()
 
     def handle_list_drop(self, payload):
         tree_node = payload['item']
@@ -836,7 +837,7 @@ class MainWindow(QMainWindow):
             self.handle_locate_file(path)
 
     def delete_items(self):
-        """输出列表控件的项
+        """删除列表控件的项
         """
         selected_items = self.ui.listWidget.selectedItems()
         if len(selected_items) == 0:
@@ -859,6 +860,7 @@ class MainWindow(QMainWindow):
         elif count == 0:
             self.clear_input_widgets()
         self.set_has_edited(True)
+        self.update_statusbar_left()
 
     def clear_input_widgets(self):
         """Clear all input widgets.
@@ -1062,6 +1064,7 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.setFocus(Qt.OtherFocusReason)
         self.window().activateWindow()
         self.set_has_edited()
+        self.update_statusbar_left()
 
     def set_has_edited(self, state=True):
         self.has_edited = state
