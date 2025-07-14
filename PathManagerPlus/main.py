@@ -133,6 +133,8 @@ class ConfigForm(QDialog):
             self.ui.expandTree.setChecked(True)
         if self.config.get('hide_toolbar', False):
             self.ui.hideToolbar.setChecked(True)
+        if self.config.get('hide_statusbar', False):
+            self.ui.hideStatusBar.setChecked(True)
 
         self.ui.pushButton.clicked.connect(self.choose_editor)
         self.ui.pushButtonConfirm.clicked.connect(self.confirm)
@@ -140,6 +142,7 @@ class ConfigForm(QDialog):
         self.ui.maximizeWindow.toggled.connect(self.handle_maximize_window)
         self.ui.expandTree.toggled.connect(self.handle_expand_tree)
         self.ui.hideToolbar.toggled.connect(self.handle_hide_toolbar)
+        self.ui.hideStatusBar.toggled.connect(self.handle_hide_statusbar)
 
     def choose_editor(self):
         if system == 'Windows':
@@ -169,6 +172,10 @@ class ConfigForm(QDialog):
 
     def handle_hide_toolbar(self, checked):
         self.config['hide_toolbar'] = checked
+        self.has_edited = True
+
+    def handle_hide_statusbar(self, checked):
+        self.config['hide_statusbar'] = checked
         self.has_edited = True
 
     def cancel(self):
@@ -327,8 +334,12 @@ class MainWindow(QMainWindow):
         # 展开所有树节点
         if config.get('expand_tree_on_startup', False):
             self.ui.treeWidget.expandAll()
+        # 根据配置隐藏工具栏和状态栏
         if config.get('hide_toolbar', False):
             self.ui.toolBar.hide()
+        if config.get('hide_statusbar', False):
+            self.ui.statusBar.hide()
+            self.ui.horizontalLayout_3.setContentsMargins(9, -1, -1, 9)
 
         main_window_size = config.get('main_window_size')
         if main_window_size is not None:
@@ -661,6 +672,13 @@ class MainWindow(QMainWindow):
                 self.ui.toolBar.hide()
             else:
                 self.ui.toolBar.show()
+        if 'hide_statusbar' in payload:
+            if payload['hide_statusbar']:
+                self.ui.statusBar.hide()
+                self.ui.horizontalLayout_3.setContentsMargins(9, -1, -1, 9)
+            else:
+                self.ui.horizontalLayout_3.setContentsMargins(9, -1, -1, 0)
+                self.ui.statusBar.show()
 
     def add_context_menu(self):
         self.ui.listWidget.setContextMenuPolicy(Qt.CustomContextMenu)
