@@ -30,6 +30,6 @@ QPlainTextEdit {
   font-size: 13pt;
 }
 
-QLineEdit {
+/*QLineEdit {
   min-height: 35px;
-}
+}*/

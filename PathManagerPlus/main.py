@@ -340,6 +340,13 @@ class MainWindow(QMainWindow):
             (main_window_size)
         )
         self.search_node = None
+
+        # 初始化后点击第一项
+        first_item = self.ui.treeWidget.topLevelItem(0)
+        if first_item:
+            self.ui.treeWidget.setCurrentItem(first_item)
+            self.tree_item_click(first_item)
+        # 设置搜索焦点
         QTimer.singleShot(0, self.search_box.setFocus)
 
     def update_statusbar_left(self):
