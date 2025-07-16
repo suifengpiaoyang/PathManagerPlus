@@ -29,6 +29,7 @@ from PySide2.QtCore import Qt, Signal, QTimer
 from .ui.main_window import Ui_MainWindow
 from .ui.config_form import Ui_ConfigForm
 from .ui.add_path_form import Ui_AddPathForm
+from .ui.custom_widgets import CustomLineEdit
 from .settings import *
 from .handle_data import (
     gen_base_data,
@@ -256,7 +257,7 @@ class MainWindow(QMainWindow):
         self.has_edited = False
 
         # 添加 QLineEdit 到工具栏
-        self.search_box = QLineEdit()
+        self.search_box = CustomLineEdit()
         self.search_box.setPlaceholderText("搜索")
         self.search_box.setMaximumWidth(200)
         self.ui.toolBar.addSeparator()
@@ -330,6 +331,7 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.listKeyPressSignal.connect(self.list_key_press)
         self.ui.treeWidget.treeKeyPressSignal.connect(self.tree_key_press)
         self.ui.treeWidget.currentItemChanged.connect(self.tree_item_change)
+        self.search_box.escSignal.connect(self.handle_esc_signal)
 
         # 展开所有树节点
         if config.get('expand_tree_on_startup', False):
@@ -359,6 +361,14 @@ class MainWindow(QMainWindow):
             self.tree_item_click(first_item)
         # 设置搜索焦点
         QTimer.singleShot(0, self.search_box.setFocus)
+
+    def handle_esc_signal(self):
+        first_item = self.ui.treeWidget.topLevelItem(0)
+        if first_item:
+            self.ui.treeWidget.setCurrentItem(first_item)
+            self.tree_item_click(first_item)
+        self.search_box.clear()
+        self.search_box.setFocus()
 
     def update_statusbar_left(self):
         node_count = self.data.node_count() - 1

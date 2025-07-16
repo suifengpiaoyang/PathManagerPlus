@@ -10,7 +10,8 @@ from PySide2.QtWidgets import (
     QTextEdit,
     QTreeWidget,
     QTreeWidgetItem,
-    QAbstractItemView
+    QAbstractItemView,
+    QLineEdit
 )
 
 
@@ -32,6 +33,17 @@ def getItemIdsFromEvent(event):
             if role == Qt.UserRole:
                 ids.append(str(value))
     return ids
+
+
+class CustomLineEdit(QLineEdit):
+
+    escSignal = Signal()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.escSignal.emit()
+        else:
+            super().keyPressEvent(event)
 
 
 class CustomQListWidget(QListWidget):
