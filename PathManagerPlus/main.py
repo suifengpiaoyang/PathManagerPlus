@@ -307,30 +307,38 @@ class MainWindow(QMainWindow):
         # self.label_center.setFixedWidth(400)
         self.update_statusbar_left()
 
-        # handle slots
+        # ----------------------- Slots -----------------------
+
+        # ----------------------- Action ----------------------
         self.ui.saveAction.triggered.connect(self.save)
         self.ui.addAction.triggered.connect(self.show_add_path_form)
         self.ui.deleteAction.triggered.connect(self.delete_items)
+        self.ui.configAction.triggered.connect(self.open_config_form)
+
+        # ----------------------- treeWidget ----------------------
         self.ui.treeWidget.itemClicked.connect(self.tree_item_click)
-        self.ui.listWidget.dropMessage.connect(self.drop_add_item)
+        self.ui.treeWidget.internalItemDropFinished.connect(
+            self.internal_tree_item_drop)
+        self.ui.treeWidget.externalFilesDroppedOnTreeItem.connect(
+            self.external_items_drop)
+        self.ui.treeWidget.updateListValue.connect(self.update_list_value)
+        self.ui.treeWidget.listItemsDroppedOnTreeItem.connect(
+            self.listitem_drop_on_tree)
+        self.ui.treeWidget.treeKeyPressSignal.connect(self.tree_key_press)
+        self.ui.treeWidget.currentItemChanged.connect(self.tree_item_change)
+
+        # ----------------------- listWidget ----------------------
+        self.ui.listWidget.dropMessage.connect(self.external_items_drop)
         self.ui.listWidget.clicked.connect(self.listwidget_left_click)
         self.ui.listWidget.itemDoubleClicked.connect(self.double_click_event)
-        self.ui.configAction.triggered.connect(self.open_config_form)
+        self.ui.listWidget.dragDropSignal.connect(self.internal_item_move)
+        self.ui.listWidget.listKeyPressSignal.connect(self.list_key_press)
+
+        # ----------------------- Others ----------------------
         self.ui.lineEditName.editingFinished.connect(self.finish_edit)
         self.ui.textEditPath.editingFinished.connect(self.change_path_data)
         self.ui.textEditComment.editingFinished.connect(
             self.change_comment_data)
-        self.ui.listWidget.dragDropSignal.connect(self.list_item_drop)
-        self.ui.treeWidget.internalItemDropFinished.connect(
-            self.internal_tree_item_drop)
-        self.ui.treeWidget.externalFilesDroppedOnTreeItem.connect(
-            self.drop_add_item)
-        self.ui.treeWidget.updateListValue.connect(self.update_list_value)
-        self.ui.treeWidget.listItemsDroppedOnTreeItem.connect(
-            self.handle_list_drop)
-        self.ui.listWidget.listKeyPressSignal.connect(self.list_key_press)
-        self.ui.treeWidget.treeKeyPressSignal.connect(self.tree_key_press)
-        self.ui.treeWidget.currentItemChanged.connect(self.tree_item_change)
         self.search_box.escSignal.connect(self.handle_esc_signal)
 
         # 展开所有树节点
@@ -532,7 +540,7 @@ class MainWindow(QMainWindow):
         self.set_has_edited(True)
         self.update_statusbar_left()
 
-    def handle_list_drop(self, payload):
+    def listitem_drop_on_tree(self, payload):
         tree_node = payload['item']
         ids = payload['ids']
         if not tree_node or len(ids) == 0:
@@ -555,57 +563,7 @@ class MainWindow(QMainWindow):
     def update_list_value(self, node):
         self.tree_item_click(node, 0)
 
-    def _get_parent_id(self, qt_node):
-        """
-        qt_node: type QTreeWidgetItem
-
-        UI 层面第一层的节点的父节点是 None，而在数据层面，第一层的父节点
-        是 root，而 root 的父节点才是 None
-        所以，如果 UI 返回的父节点对象是 None 的话，就意味着它们是在第一层，
-        对应的数据层面父节点的 id 应该是 root。而如果返回的父节点是一个实实在在
-        的对象的话，那么，实际上父节点 id 也就是这个节点所存的那个值
-        """
-        if qt_node is None:
-            parent_id = 'root'
-        else:
-            parent_id = qt_node.data(0, Qt.UserRole)
-        return parent_id
-
-    def internal_tree_item_drop(self, payload):
-
-        # parse data
-        node = payload['item']
-        old_index = payload['old_index']
-        new_index = payload['new_index']
-        old_parent = payload['old_parent']
-        new_parent = payload['new_parent']
-        if not node:
-            return
-        # 移动一个节点需要知道四个要素：
-        # 1. 原来节点的父节点的 id
-        # 2. 原来节点在父节点中的位置，也就是下标
-        # 3. 移动后节点的父节点的 id
-        # 4. 移动后在父节点中的位置，也就是下标
-        # 两个下标在 UI 层面一下就拿到了。所以需要着重处理的是父节点的问题。
-        node_id = node.data(0, Qt.UserRole)
-        new_parent_id = self._get_parent_id(new_parent)
-        old_parent_id = self._get_parent_id(old_parent)
-        # print(
-        #     f'{self.data.get_node_name(old_parent_id)}>'
-        #     f'{self.data.get_node_name(node_id)} >> '
-        #     f'{self.data.get_node_name(new_parent_id)}>'
-        #     f'{self.data.get_node_name(node_id)}'
-        # )
-        # print(f'{old_parent_id}>{node_id} >> {new_parent_id}>{node_id}')
-        if old_parent_id == new_parent_id and old_index == new_index:
-            return
-        elif old_parent_id == new_parent_id and old_index != new_index:
-            self.data.change_node_index(node_id, new_index)
-        else:
-            self.data.change_node_parent(node_id, new_parent_id, new_index)
-        self.set_has_edited(True)
-
-    def list_item_drop(self, payload):
+    def internal_item_move(self, payload):
         item = self.ui.listWidget.currentItem()
         if not item:
             return
@@ -625,6 +583,55 @@ class MainWindow(QMainWindow):
         # 处理数据层面
         self.data.move_item_within_node(item_id, end_row)
         self.set_has_edited(True)
+
+    def external_items_drop(self, urllist):
+        node = self.ui.treeWidget.currentItem()
+        node_id = node.data(0, Qt.UserRole)
+        self.ui.listWidget.clearSelection()
+        for QUrl in urllist:
+            path = QUrl.toLocalFile()
+            row_count = self.ui.listWidget.count()
+            basename = os.path.basename(path)
+            item_data = get_data_format('item')
+            item_data['name'] = basename
+            item_data['path'] = path
+            item_id = self.data.add_item(item_data, node_id)
+            item = QListWidgetItem(basename)
+            item.setData(Qt.UserRole, item_id)
+            self.ui.listWidget.addItem(item)
+            item.setSelected(True)
+        self.listwidget_left_click(item)
+        self.ui.listWidget.setCurrentItem(item)
+        self.ui.listWidget.setFocus(Qt.OtherFocusReason)
+        self.window().activateWindow()
+        self.set_has_edited()
+        self.update_statusbar_left()
+
+    def delete_items(self):
+        """删除列表控件的项
+        """
+        selected_items = self.ui.listWidget.selectedItems()
+        if len(selected_items) == 0:
+            QMessageBox.about(
+                self,
+                '提示',
+                '此功能用于删除列表上的项。你需要先选中项才能使用该功能。'
+            )
+            return
+        for item in selected_items:
+            row = self.ui.listWidget.row(item)
+            self.ui.listWidget.takeItem(row)    # 处理UI界面
+            item_id = item.data(Qt.UserRole)
+            self.data.remove_item(item_id)      # 处理数据删除
+        count = self.ui.listWidget.count()
+        if count > 0:
+            current_item = self.ui.listWidget.currentItem()
+            self.ui.listWidget.setCurrentItem(current_item)
+            self.listwidget_left_click(current_item)
+        elif count == 0:
+            self.clear_input_widgets()
+        self.set_has_edited(True)
+        self.update_statusbar_left()
 
     def change_path_data(self):
         node = self.ui.treeWidget.currentItem()
@@ -869,32 +876,6 @@ class MainWindow(QMainWindow):
             path = item_data['path']
             self.handle_locate_file(path)
 
-    def delete_items(self):
-        """删除列表控件的项
-        """
-        selected_items = self.ui.listWidget.selectedItems()
-        if len(selected_items) == 0:
-            QMessageBox.about(
-                self,
-                '提示',
-                '此功能用于删除列表上的项。你需要先选中项才能使用该功能。'
-            )
-            return
-        for item in selected_items:
-            row = self.ui.listWidget.row(item)
-            self.ui.listWidget.takeItem(row)    # 处理UI界面
-            item_id = item.data(Qt.UserRole)
-            self.data.remove_item(item_id)      # 处理数据删除
-        count = self.ui.listWidget.count()
-        if count > 0:
-            current_item = self.ui.listWidget.currentItem()
-            self.ui.listWidget.setCurrentItem(current_item)
-            self.listwidget_left_click(current_item)
-        elif count == 0:
-            self.clear_input_widgets()
-        self.set_has_edited(True)
-        self.update_statusbar_left()
-
     def clear_input_widgets(self):
         """Clear all input widgets.
         """
@@ -925,6 +906,56 @@ class MainWindow(QMainWindow):
         # self.tree_item_click(item, 0)
         self.treewidget_menu.exec_(
             self.ui.treeWidget.mapToGlobal(position))
+
+    def _get_parent_id(self, qt_node):
+        """
+        qt_node: type QTreeWidgetItem
+
+        UI 层面第一层的节点的父节点是 None，而在数据层面，第一层的父节点
+        是 root，而 root 的父节点才是 None
+        所以，如果 UI 返回的父节点对象是 None 的话，就意味着它们是在第一层，
+        对应的数据层面父节点的 id 应该是 root。而如果返回的父节点是一个实实在在
+        的对象的话，那么，实际上父节点 id 也就是这个节点所存的那个值
+        """
+        if qt_node is None:
+            parent_id = 'root'
+        else:
+            parent_id = qt_node.data(0, Qt.UserRole)
+        return parent_id
+
+    def internal_tree_item_drop(self, payload):
+
+        # parse data
+        node = payload['item']
+        old_index = payload['old_index']
+        new_index = payload['new_index']
+        old_parent = payload['old_parent']
+        new_parent = payload['new_parent']
+        if not node:
+            return
+        # 移动一个节点需要知道四个要素：
+        # 1. 原来节点的父节点的 id
+        # 2. 原来节点在父节点中的位置，也就是下标
+        # 3. 移动后节点的父节点的 id
+        # 4. 移动后在父节点中的位置，也就是下标
+        # 两个下标在 UI 层面一下就拿到了。所以需要着重处理的是父节点的问题。
+        node_id = node.data(0, Qt.UserRole)
+        new_parent_id = self._get_parent_id(new_parent)
+        old_parent_id = self._get_parent_id(old_parent)
+        # print(
+        #     f'{self.data.get_node_name(old_parent_id)}>'
+        #     f'{self.data.get_node_name(node_id)} >> '
+        #     f'{self.data.get_node_name(new_parent_id)}>'
+        #     f'{self.data.get_node_name(node_id)}'
+        # )
+        # print(f'{old_parent_id}>{node_id} >> {new_parent_id}>{node_id}')
+        if old_parent_id == new_parent_id and old_index == new_index:
+            return
+        elif old_parent_id == new_parent_id and old_index != new_index:
+            self.data.change_node_index(node_id, new_index)
+        else:
+            self.data.change_node_parent(node_id, new_parent_id, new_index)
+        self.set_has_edited(True)
 
     def add_node(self):
         name, ok = QInputDialog.getText(
@@ -1077,29 +1108,6 @@ class MainWindow(QMainWindow):
             raise TypeError
         subprocess.Popen([editor_path, target])
 
-    def drop_add_item(self, urllist):
-        node = self.ui.treeWidget.currentItem()
-        node_id = node.data(0, Qt.UserRole)
-        self.ui.listWidget.clearSelection()
-        for QUrl in urllist:
-            path = QUrl.toLocalFile()
-            row_count = self.ui.listWidget.count()
-            basename = os.path.basename(path)
-            item_data = get_data_format('item')
-            item_data['name'] = basename
-            item_data['path'] = path
-            item_id = self.data.add_item(item_data, node_id)
-            item = QListWidgetItem(basename)
-            item.setData(Qt.UserRole, item_id)
-            self.ui.listWidget.addItem(item)
-            item.setSelected(True)
-        self.listwidget_left_click(item)
-        self.ui.listWidget.setCurrentItem(item)
-        self.ui.listWidget.setFocus(Qt.OtherFocusReason)
-        self.window().activateWindow()
-        self.set_has_edited()
-        self.update_statusbar_left()
-
     def set_has_edited(self, state=True):
         self.has_edited = state
         if state:
@@ -1110,6 +1118,19 @@ class MainWindow(QMainWindow):
     def save(self):
         self.data.to_json(DATABASE)
         self.set_has_edited(False)
+
+    def try_to_save_window_size(self):
+        """
+        仅保存拖拽窗口之后的窗体大小。最大化不算。和原来大小一样不保存。
+        """
+        if self.isMaximized():
+            if self.size_controler[0] != self.size_controler.base_size:
+                config['main_window_size'] = self.size_controler[0]
+                config.to_json(CONFIG_FILE)
+        else:
+            if self.size_controler[-1] != self.size_controler.base_size:
+                config['main_window_size'] = self.size_controler[-1]
+                config.to_json(CONFIG_FILE)
 
     def resizeEvent(self, event):
         """
@@ -1130,19 +1151,6 @@ class MainWindow(QMainWindow):
             # 这个函数会在 MainWindow 初始化完成之前就运行
             pass
         super().resizeEvent(event)
-
-    def try_to_save_window_size(self):
-        """
-        仅保存拖拽窗口之后的窗体大小。最大化不算。和原来大小一样不保存。
-        """
-        if self.isMaximized():
-            if self.size_controler[0] != self.size_controler.base_size:
-                config['main_window_size'] = self.size_controler[0]
-                config.to_json(CONFIG_FILE)
-        else:
-            if self.size_controler[-1] != self.size_controler.base_size:
-                config['main_window_size'] = self.size_controler[-1]
-                config.to_json(CONFIG_FILE)
 
     def closeEvent(self, event):
         self.try_to_save_window_size()
