@@ -390,14 +390,18 @@ class MainWindow(QMainWindow):
             self.search_node = QTreeWidgetItem(self.ui.treeWidget)
             self.search_node.setText(0, '搜索结果')
             self.ui.treeWidget.setCurrentItem(self.search_node)
-        result_count = 0
 
+        # 处理数据部分
         # 不区分大小写搜索 name, path, comment
         # 这里的部分后续如果要增强搜索功能，比如正则表达式之类的，
         # 需要在这里进行接口改变。
+        result_count = 0
         text = text.lower()
         for item_id in self.data['items']:
-            item_data = self.data['items'][item_id]
+            try:
+                item_data = self.data['items'][item_id]
+            except:
+                continue
             name = self._format_data(item_data.get('name'))
             path = self._format_data(item_data.get('path'))
             comment = self._format_data(item_data.get('comment'))
@@ -408,6 +412,7 @@ class MainWindow(QMainWindow):
                 item.setData(Qt.UserRole, item_id)
                 self.ui.listWidget.addItem(item)
                 result_count += 1
+
         # 更新状态栏
         self.label_center.setText(f'搜索结果：{result_count}')
 
