@@ -865,7 +865,9 @@ class MainWindow(QMainWindow):
         if not os.path.exists(path):
             QMessageBox.critical(self, '错误', f'找不到该文件：{path}')
             return
-        system_actions.locate_file(path)
+        status, message = system_actions.locate_file(path)
+        if not status:
+            QMessageBox.about(self, '提示', message)
 
     def locate_files(self):
         items = self.get_listwidget_selected_items()

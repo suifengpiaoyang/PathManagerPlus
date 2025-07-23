@@ -29,6 +29,7 @@ def locate_file(file):
     """
     file = Path(file)
     subprocess.run(['explorer', '/select,', str(file.resolve())])
+    return True, ''
 
 
 def open_directory(directory):
