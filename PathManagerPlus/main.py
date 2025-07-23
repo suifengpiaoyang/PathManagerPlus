@@ -1075,6 +1075,7 @@ class MainWindow(QMainWindow):
     def drop_add_item(self, urllist):
         node = self.ui.treeWidget.currentItem()
         node_id = node.data(0, Qt.UserRole)
+        self.ui.listWidget.clearSelection()
         for QUrl in urllist:
             path = QUrl.toLocalFile()
             row_count = self.ui.listWidget.count()
@@ -1086,8 +1087,8 @@ class MainWindow(QMainWindow):
             item = QListWidgetItem(basename)
             item.setData(Qt.UserRole, item_id)
             self.ui.listWidget.addItem(item)
+            item.setSelected(True)
         self.listwidget_left_click(item)
-        item.setSelected(True)
         self.ui.listWidget.setCurrentItem(item)
         self.ui.listWidget.setFocus(Qt.OtherFocusReason)
         self.window().activateWindow()
