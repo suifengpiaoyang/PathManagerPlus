@@ -144,6 +144,12 @@ class ConfigForm(QDialog):
         self.ui.expandTree.toggled.connect(self.handle_expand_tree)
         self.ui.hideToolbar.toggled.connect(self.handle_hide_toolbar)
         self.ui.hideStatusBar.toggled.connect(self.handle_hide_statusbar)
+        self.ui.lineEditEditorName.textChanged.connect(self.change_name)
+
+    def change_name(self):
+        name = self.ui.lineEditEditorName.text().strip()
+        self.config['editor_name'] = name
+        self.has_edited = True
 
     def choose_editor(self):
         if system == 'Windows':
