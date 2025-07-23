@@ -147,21 +147,24 @@ class ConfigForm(QDialog):
 
     def choose_editor(self):
         if system == 'Windows':
-            path, _ = QFileDialog.getOpenFileName(
-                self,
-                '选择编辑器',
-                None,
-                'Program (*.exe)'
-            )
-            if not path:
-                return
-            self.ui.lineEditEditorPath.setText(path)
-            name = os.path.basename(path)
-            name = name.split('.')[0].title().replace('_', ' ')
-            self.ui.lineEditEditorName.setText(name)
-            self.config['editor_path'] = path
-            self.config['editor_name'] = name
-            self.has_edited = True
+            program_type = 'Program (*.exe)'
+        else:
+            program_type = None
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            '选择编辑器',
+            None,
+            program_type
+        )
+        if not path:
+            return
+        self.ui.lineEditEditorPath.setText(path)
+        name = os.path.basename(path)
+        name = name.split('.')[0].title().replace('_', ' ')
+        self.ui.lineEditEditorName.setText(name)
+        self.config['editor_path'] = path
+        self.config['editor_name'] = name
+        self.has_edited = True
 
     def handle_expand_tree(self, checked):
         self.config['expand_tree_on_startup'] = checked
