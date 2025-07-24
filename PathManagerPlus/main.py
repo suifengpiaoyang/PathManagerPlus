@@ -3,6 +3,7 @@ import sys
 import webbrowser
 import subprocess
 import platform
+from pathlib import Path
 
 from PySide6.QtGui import (
     QIcon,
@@ -600,7 +601,7 @@ class MainWindow(QMainWindow):
         for QUrl in urllist:
             path = QUrl.toLocalFile()
             row_count = self.ui.listWidget.count()
-            basename = os.path.basename(path)
+            basename = os.path.basename(Path(path))
             item_data = get_data_format('item')
             item_data['name'] = basename
             item_data['path'] = path

@@ -25,7 +25,6 @@ def open_file(file):
 
 def locate_file(file):
     """定位文件
-    Windows 平台对路径的要求很严格，需要用反斜杠，否则无法定位。
     """
     file = Path(file)
     subprocess.run(["open", "-R", file])
