@@ -13,13 +13,13 @@
 #### 依赖环境
 
 - Python 3.8+
-- PySide2
+- PySide6
 - 无其他依赖
 
 #### 安装相关的 python package
 
 ```
-pip install pyside2
+pip install pyside6
 ```
 
 #### 将 .ui 生成对应的 .py 文件
@@ -27,9 +27,9 @@ pip install pyside2
 进入 console 界面 ui 的路径(PathManagerPlus\PathManagerPlus\ui)下，运行
 
 ```
-pyside2-uic main_window.ui -o main_window.py
-pyside2-uic config_form.ui -o config_form.py
-pyside2-uic add_path_form.ui -o add_path_form.py
+pyside6-uic main_window.ui -o main_window.py
+pyside6-uic config_form.ui -o config_form.py
+pyside6-uic add_path_form.ui -o add_path_form.py
 ```
 
 #### 运行程序
@@ -40,13 +40,12 @@ pyside2-uic add_path_form.ui -o add_path_form.py
 
 | 操作系统   | 支持状态   | 说明                                                   |
 | ---------- | ---------- | ------------------------------------------------------ |
-| Windows 7  | ✅ 支持     | 已测试，运行良好                                       |
+| Windows 7  | ❌ 不支持     |                                        |
 | Windows 10 | ✅ 支持     | 主开发/测试平台                                        |
-| Windows 11 | ⚠️ 预计支持 | 尚未实机测试，理论兼容                                 |
-| Linux      | 🚧 开发中   | 预留了结构，尚未测试与打包                             |
-| macOS      | ❌ 不支持   | 当前 PySide2 无法正常安装；后续将迁移至 PySide6 以支持 |
+| Windows 11 | ⚠️ 预计支持 | 理论兼容                                 |
+| Linux      | 🚧 开发中   | 基本功能可用，已适配部分系统                             |
+| macOS      | ✅ 支持   |  |
 
-> 关于 macOS 支持：由于 PySide2 在 macOS 上存在安装兼容性问题，计划在后续新分支中使用 PySide6 替代，完成后将支持 macOS。
 
 ## 软件界面
 
