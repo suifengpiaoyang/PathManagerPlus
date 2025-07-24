@@ -44,10 +44,15 @@ system = platform.system()
 
 if system == "Windows":
     from .actions import windows_actions as system_actions
+    from .settings import WINDOWS_QSS_PATH as PROJECT_QSS
 elif system == "Linux":
     from .actions import linux_actions as system_actions
+    from .settings import LINUX_QSS_PATH as PROJECT_QSS
 elif system == "Darwin":
     from .actions import mac_actions as system_actions
+    from .settings import MAC_QSS_PATH as PROJECT_QSS
+else:
+    raise SystemExit('不支持这个系统。')
 
 if os.path.exists(CONFIG_FILE):
     config = JsonDb.from_json(CONFIG_FILE)
@@ -66,7 +71,7 @@ else:
 
 
 def load_qss():
-    with open(STYLE_FILE, 'r', encoding='utf-8')as fl:
+    with open(PROJECT_QSS, 'r', encoding='utf-8')as fl:
         qss = fl.read()
     return qss
 
@@ -115,8 +120,8 @@ class ConfigForm(QDialog):
         self.has_edited = False
 
         # set gui icon
-        if os.path.exists(ICON_PATH):
-            self.setWindowIcon(QIcon(ICON_PATH))
+        if os.path.exists(PROJECT_ICON_PATH):
+            self.setWindowIcon(QIcon(PROJECT_ICON_PATH))
 
         # load config file
         if os.path.exists(CONFIG_FILE):
