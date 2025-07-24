@@ -5,3 +5,4 @@ __pycache__/
 *.json
 tests/
 run.pyw
+**/.DS_Store

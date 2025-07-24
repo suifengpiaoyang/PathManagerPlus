@@ -4,19 +4,19 @@ import webbrowser
 import subprocess
 import platform
 
-from PySide2.QtGui import (
+from PySide6.QtGui import (
     QIcon,
     QKeySequence,
-    QFont
+    QFont,
+    QShortcut,
+    QAction
 )
-from PySide2.QtWidgets import (
+from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
     QTreeWidgetItem,
     QListWidgetItem,
     QMessageBox,
-    QShortcut,
-    QAction,
     QMenu,
     QWidget,
     QFileDialog,
@@ -25,7 +25,7 @@ from PySide2.QtWidgets import (
     QLineEdit,
     QLabel
 )
-from PySide2.QtCore import Qt, Signal, QTimer
+from PySide6.QtCore import Qt, Signal, QTimer
 from .ui.main_window import Ui_MainWindow
 from .ui.config_form import Ui_ConfigForm
 from .ui.add_path_form import Ui_AddPathForm
@@ -46,7 +46,7 @@ if system == "Windows":
 elif system == "Linux":
     from .actions import linux_actions as system_actions
 elif system == "Darwin":
-    raise SysteExit('当前该程序的代码不支持这个系统。')
+    from .actions import mac_actions as system_actions
 
 if os.path.exists(CONFIG_FILE):
     config = JsonDb.from_json(CONFIG_FILE)

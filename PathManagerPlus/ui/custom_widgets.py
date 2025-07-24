@@ -1,11 +1,11 @@
-from PySide2.QtCore import (
+from PySide6.QtCore import (
     Signal,
     QDataStream,
     QByteArray,
     QIODevice,
     Qt
 )
-from PySide2.QtWidgets import (
+from PySide6.QtWidgets import (
     QListWidget,
     QTextEdit,
     QTreeWidget,
