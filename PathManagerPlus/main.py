@@ -1123,7 +1123,7 @@ class MainWindow(QMainWindow):
                 target = os.path.dirname(path)
         else:
             raise TypeError
-        subprocess.Popen([editor_path, target])
+        system_actions.use_editor_open_path(editor_path, target)
 
     def set_has_edited(self, state=True):
         self.has_edited = state

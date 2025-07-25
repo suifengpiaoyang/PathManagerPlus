@@ -73,3 +73,6 @@ def open_console(directory):
 
 def open_ftp(ftp_url):
     subprocess.Popen(['xdg-open', ftp_url])
+
+def use_editor_open_path(editor, path):
+    subprocess.Popen([editor, path])

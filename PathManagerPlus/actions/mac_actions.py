@@ -43,3 +43,6 @@ def open_console(directory):
 
 def open_ftp(ftp_url):
     subprocess.run(["open", ftp_url])
+
+def use_editor_open_path(editor, path):
+    subprocess.Popen(['open', '-a', editor, path])
