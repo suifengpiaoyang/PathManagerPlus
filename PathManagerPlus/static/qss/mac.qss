@@ -5,7 +5,7 @@ QMenuBar {
 
 QMenu {
   font-family: "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif;
-  font-size: 10pt;
+  font-size: 12pt;
 }
 
 QTreeWidget {
