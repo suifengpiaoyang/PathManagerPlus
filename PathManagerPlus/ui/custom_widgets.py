@@ -11,7 +11,8 @@ from PySide6.QtWidgets import (
     QTreeWidget,
     QTreeWidgetItem,
     QAbstractItemView,
-    QLineEdit
+    QLineEdit,
+    QPlainTextEdit
 )
 
 
@@ -273,7 +274,7 @@ class CustomQTreeWidget(QTreeWidget):
         super().keyPressEvent(event)
 
 
-class CustomQTextEdit(QTextEdit):
+class CustomQTextEdit(QPlainTextEdit):
 
     editingFinished = Signal()
 
