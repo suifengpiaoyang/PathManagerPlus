@@ -260,7 +260,8 @@ class CustomQTreeWidget(QTreeWidget):
         item = self.currentItem()
         if event.key() == Qt.Key_Right:
             item = self.currentItem()
-            if self.isItemExpanded(item):
+            index = self.indexFromItem(item)
+            if self.isExpanded(index):
                 self.treeKeyPressSignal.emit('right')
             else:
                 self.expandItem(item)
