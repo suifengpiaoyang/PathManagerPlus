@@ -280,8 +280,8 @@ class MainWindow(QMainWindow):
         self.search_box.returnPressed.connect(self.handle_search)
 
         # set gui icon
-        if os.path.exists(ICON_PATH):
-            self.setWindowIcon(QIcon(ICON_PATH))
+        if os.path.exists(PROJECT_ICON_PATH):
+            self.setWindowIcon(QIcon(PROJECT_ICON_PATH))
         if os.path.exists(SAVE_ICON_PATH):
             self.ui.saveAction.setIcon(QIcon(SAVE_ICON_PATH))
         if os.path.exists(ADD_ICON_PATH):
