@@ -480,17 +480,24 @@ class MainWindow(QMainWindow):
         self.action_add_node = QAction('添加节点')
         self.action_add_sub_node = QAction('添加子节点')
         self.action_edit_node_name = QAction('修改节点名称')
+        self.action_ascend_items = QAction('升序')
+        self.action_descend_items = QAction('降序')
         self.action_delete_node = QAction('删除节点')
 
         self.action_add_node.triggered.connect(self.add_node)
         self.action_add_sub_node.triggered.connect(self.add_sub_node)
         self.action_edit_node_name.triggered.connect(self.edit_node_name)
+        self.action_ascend_items.triggered.connect(self.ascent_items)
+        self.action_descend_items.triggered.connect(self.descend_items)
         self.action_delete_node.triggered.connect(self.delete_node)
 
         self.treewidget_menu = QMenu(self.ui.treeWidget)
         self.treewidget_menu.addAction(self.action_add_node)
         self.treewidget_menu.addAction(self.action_add_sub_node)
         self.treewidget_menu.addAction(self.action_edit_node_name)
+        self.treewidget_menu.addSeparator()
+        self.treewidget_menu.addAction(self.action_ascend_items)
+        self.treewidget_menu.addAction(self.action_descend_items)
         self.treewidget_menu.addSeparator()
         self.treewidget_menu.addAction(self.action_delete_node)
 
@@ -762,6 +769,9 @@ class MainWindow(QMainWindow):
             self.render_node(_node_id)
 
     def tree_item_click(self, item, column=0):
+        """
+        item: PySide6.QtWidgets.QTreeWidgetItem
+        """
         if item is None:
             return
         node_id = item.data(0, Qt.UserRole)
@@ -1105,6 +1115,25 @@ class MainWindow(QMainWindow):
         #     self.tree_item_click(node)
         self.set_has_edited(True)
         self.update_statusbar_left()
+
+    def sort_items(self, reverse=False):
+        node = self.ui.treeWidget.currentItem()
+        node_id = node.data(0, Qt.UserRole)
+        if node_id is None:
+            # 搜索模式下，不支持这功能。
+            return
+        items = self.data['nodes'][node_id]['items']
+        if len(items) == 0:
+            return
+        self.data.sort_items_within_node(node_id, reverse=reverse)
+        self.tree_item_click(node)
+        self.set_has_edited(True)
+
+    def ascent_items(self):
+        self.sort_items()
+
+    def descend_items(self):
+        self.sort_items(reverse=True)
 
     def open_with_editor(self, flag):
         items = self.get_listwidget_selected_items()
