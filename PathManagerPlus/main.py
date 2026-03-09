@@ -445,6 +445,7 @@ class MainWindow(QMainWindow):
         self.action_open_file_with_editor = QAction()
         self.action_open_path_with_editor = QAction()
         self.action_locate_file = QAction('定位文件')
+        self.action_copy_items = QAction('复制项')
         self.action_open_selected_file = QAction('打开目标文件(同双击)')
         self.action_delete_items = QAction('删除')
 
@@ -457,6 +458,7 @@ class MainWindow(QMainWindow):
         self.action_open_path_with_editor.triggered.connect(
             lambda: self.open_with_editor(flag='path'))
         self.action_locate_file.triggered.connect(self.locate_files)
+        self.action_copy_items.triggered.connect(self.copy_items)
         self.action_open_selected_file.triggered.connect(
             self.open_selected_files)
         self.action_delete_items.triggered.connect(self.delete_items)
@@ -468,6 +470,8 @@ class MainWindow(QMainWindow):
         self.listwidget_menu.addSeparator()
         self.listwidget_menu.addAction(self.action_open_file_with_editor)
         self.listwidget_menu.addAction(self.action_open_path_with_editor)
+        self.listwidget_menu.addSeparator()
+        self.listwidget_menu.addAction(self.action_copy_items)
         self.listwidget_menu.addSeparator()
         self.listwidget_menu.addAction(self.action_delete_items)
         self.listwidget_menu.addAction(self.action_open_selected_file)
@@ -892,6 +896,30 @@ class MainWindow(QMainWindow):
             item_data = self.get_listwidget_item_data(item)
             path = item_data['path']
             self.handle_locate_file(path)
+
+    def copy_items(self):
+        items = self.get_listwidget_selected_items()
+        if not items:
+            return
+        # 不通过这种方式获取 node_id，则可以实现在搜索状态下
+        # 在多个不同的节点上同时复制产生多个项。
+        # node = self.ui.treeWidget.currentItem()
+        # node_id = node.data(0, Qt.UserRole)
+        self.ui.listWidget.clearSelection()
+        for _item in items:
+            item_data = self.get_listwidget_item_data(_item)
+            node_id = item_data['parent_id']
+            item_id = self.data.add_item(item_data, node_id)
+            item = QListWidgetItem(item_data['name'])
+            item.setData(Qt.UserRole, item_id)
+            self.ui.listWidget.addItem(item)
+            item.setSelected(True)
+        self.listwidget_left_click(item)
+        self.ui.listWidget.setCurrentItem(item)
+        self.ui.listWidget.setFocus(Qt.OtherFocusReason)
+        self.window().activateWindow()
+        self.set_has_edited()
+        self.update_statusbar_left()
 
     def clear_input_widgets(self):
         """Clear all input widgets.
