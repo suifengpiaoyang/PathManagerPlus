@@ -229,6 +229,19 @@ class DataStorage(dict):
         else:
             print(names)
 
+    def sort_items_within_node(self, node_id, reverse=False):
+        """
+        给节点中的项进行排序，默认为升序。reverse 为 True 时则为降序。
+        """
+        node = self['nodes'][node_id]
+        items = node['items']
+        sorted_items = sorted(
+            items,
+            key=lambda x: self['items'][x]['name'],
+            reverse=reverse
+        )
+        self['nodes'][node_id]['items'] = sorted_items
+
     def pretty_print(self, indent=4):
         print(json.dumps(self, indent=indent, ensure_ascii=False))
 
