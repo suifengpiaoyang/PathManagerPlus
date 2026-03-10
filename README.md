@@ -140,8 +140,6 @@ os.system('pause')
 
 按快捷键 `Ctrl+N` 或者点击工具栏上的图标，弹出这个窗口。比如我们添加 python 官网：
 
-![add-url1](images/README/add-url1.png)
-
 ![](assets/add-url2.png)
 
 你也可以将它拖到自己想要的位置：
