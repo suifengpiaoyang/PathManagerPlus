@@ -177,3 +177,19 @@ os.system('pause')
 - `Esc`: 在搜索模式下，焦点在搜索框中时可用于清空搜索值，方便快速搜索
 - `Enter`: 在列表框中，按 `Enter` 可用于打开对应项。支持多选，目前限制为一次性最多打开 5 项。
 
+## Windows 下程序打包方式
+
+1. 搭建虚拟环境
+2. 安装 requirements.txt 中的模块
+3. 安装 pyinstaller，并运行以下命令
+
+```
+pyi-makespec run.py -D -w -i "PathManagerPlus/static/icons/folder.ico" --add-data "PathManagerPlus/static;PathManagerPlus/static"  --add-data "LICENSE;." -n PathManagerPlus
+```
+
+接着：
+
+```
+pyinstaller PathManagerPlus.spec
+```
+
