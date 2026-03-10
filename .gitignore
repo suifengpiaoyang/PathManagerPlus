@@ -3,5 +3,6 @@ __pycache__/
 */ui/config_form.py
 */ui/add_path_form.py
 *.json
-tests/
+tmp/
 run.pyw
+**/.DS_Store

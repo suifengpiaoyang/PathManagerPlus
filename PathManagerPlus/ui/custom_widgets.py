@@ -1,17 +1,18 @@
-from PySide2.QtCore import (
+from PySide6.QtCore import (
     Signal,
     QDataStream,
     QByteArray,
     QIODevice,
     Qt
 )
-from PySide2.QtWidgets import (
+from PySide6.QtWidgets import (
     QListWidget,
     QPlainTextEdit,
     QTreeWidget,
     QTreeWidgetItem,
     QAbstractItemView,
-    QLineEdit
+    QLineEdit,
+    QPlainTextEdit
 )
 
 
@@ -259,7 +260,8 @@ class CustomQTreeWidget(QTreeWidget):
         item = self.currentItem()
         if event.key() == Qt.Key_Right:
             item = self.currentItem()
-            if self.isItemExpanded(item):
+            index = self.indexFromItem(item)
+            if self.isExpanded(index):
                 self.treeKeyPressSignal.emit('right')
             else:
                 self.expandItem(item)

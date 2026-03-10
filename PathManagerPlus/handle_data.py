@@ -229,6 +229,19 @@ class DataStorage(dict):
         else:
             print(names)
 
+    def sort_items_within_node(self, node_id, reverse=False):
+        """
+        给节点中的项进行排序，默认为升序。reverse 为 True 时则为降序。
+        """
+        node = self['nodes'][node_id]
+        items = node['items']
+        sorted_items = sorted(
+            items,
+            key=lambda x: self['items'][x]['name'],
+            reverse=reverse
+        )
+        self['nodes'][node_id]['items'] = sorted_items
+
     def pretty_print(self, indent=4):
         print(json.dumps(self, indent=indent, ensure_ascii=False))
 
@@ -308,43 +321,3 @@ def gen_base_data():
     d.add_node('链接', node)
     d.add_node('其他', node)
     return d
-
-
-if __name__ == '__main__':
-    # d = DataStorage.from_json('data.json')
-    # status = d.check_data_integrity()
-    # print(status)
-    # if not status:
-    #     d.fix_data(
-    #         'data.json'
-    #     )
-    # d.pretty_print()
-    d = DataStorage()
-    node_a = d.add_node('A')
-    node_b = d.add_node('B', node_a)
-    node_c = d.add_node('C', node_b)
-    node_d = d.add_node('D', node_b)
-    d.add_item('b1', node_b)
-    d.add_item('b2', node_b)
-    item1 = d.add_item('c1', node_c)
-    item2 = d.add_item('c2', node_c)
-    item3 = d.add_item('c3', node_c)
-    # d.print_sub_nodes_name(node_b, False)
-    d.pretty_print()
-    d.move_item_to_node(item2, node_a)
-    d.pretty_print()
-    # d.change_node_parent(node_d, node_a, 0)
-    # d.change_node_index(node_d, 0)
-    # d.remove_node(node_a)
-    # d.change_node_name(node_a, 'Test')
-    # print(d['nodes'][node_c]['items'])
-    # d.move_item_within_node(item3, 0)
-    # d.move_item_to_last(item1)
-    # d.move_item_to_first(item3)
-    # print(d['nodes'][node_c]['items'])
-    # d = gen_base_data()
-    # d.pretty_print()
-    # d = DataStorage.from_json('data.json')
-    # d.pretty_print()
-    # d = DataStorage({1: 10})
-    # print(d)

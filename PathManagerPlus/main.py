@@ -3,20 +3,21 @@ import sys
 import webbrowser
 import subprocess
 import platform
+from pathlib import Path
 
-from PySide2.QtGui import (
+from PySide6.QtGui import (
     QIcon,
     QKeySequence,
-    QFont
+    QFont,
+    QShortcut,
+    QAction
 )
-from PySide2.QtWidgets import (
+from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
     QTreeWidgetItem,
     QListWidgetItem,
     QMessageBox,
-    QShortcut,
-    QAction,
     QMenu,
     QWidget,
     QFileDialog,
@@ -25,7 +26,7 @@ from PySide2.QtWidgets import (
     QLineEdit,
     QLabel
 )
-from PySide2.QtCore import Qt, Signal, QTimer
+from PySide6.QtCore import Qt, Signal, QTimer
 from .ui.main_window import Ui_MainWindow
 from .ui.config_form import Ui_ConfigForm
 from .ui.add_path_form import Ui_AddPathForm
@@ -43,10 +44,15 @@ system = platform.system()
 
 if system == "Windows":
     from .actions import windows_actions as system_actions
+    from .settings import WINDOWS_QSS_PATH as PROJECT_QSS
 elif system == "Linux":
     from .actions import linux_actions as system_actions
+    from .settings import LINUX_QSS_PATH as PROJECT_QSS
 elif system == "Darwin":
-    raise SysteExit('当前该程序的代码不支持这个系统。')
+    from .actions import mac_actions as system_actions
+    from .settings import MAC_QSS_PATH as PROJECT_QSS
+else:
+    raise SystemExit('不支持这个系统。')
 
 if os.path.exists(CONFIG_FILE):
     config = JsonDb.from_json(CONFIG_FILE)
@@ -65,7 +71,7 @@ else:
 
 
 def load_qss():
-    with open(STYLE_FILE, 'r', encoding='utf-8')as fl:
+    with open(PROJECT_QSS, 'r', encoding='utf-8')as fl:
         qss = fl.read()
     return qss
 
@@ -114,8 +120,11 @@ class ConfigForm(QDialog):
         self.has_edited = False
 
         # set gui icon
-        if os.path.exists(ICON_PATH):
-            self.setWindowIcon(QIcon(ICON_PATH))
+        if os.path.exists(PROJECT_ICON_PATH):
+            self.setWindowIcon(QIcon(PROJECT_ICON_PATH))
+
+        # load data path
+        self.ui.lineEditDataPath.setText(PROJECT_PATH)
 
         # load config file
         if os.path.exists(CONFIG_FILE):
@@ -140,11 +149,17 @@ class ConfigForm(QDialog):
         self.ui.pushButton.clicked.connect(self.choose_editor)
         self.ui.pushButtonConfirm.clicked.connect(self.confirm)
         self.ui.pushButtonCancel.clicked.connect(self.cancel)
+        self.ui.pushButtonOpenPath.clicked.connect(self.open_path)
         self.ui.maximizeWindow.toggled.connect(self.handle_maximize_window)
         self.ui.expandTree.toggled.connect(self.handle_expand_tree)
         self.ui.hideToolbar.toggled.connect(self.handle_hide_toolbar)
         self.ui.hideStatusBar.toggled.connect(self.handle_hide_statusbar)
         self.ui.lineEditEditorName.textChanged.connect(self.change_name)
+
+
+    def open_path(self):
+        # 不可能不存在 PROJECT_PATH，这里就不加判断代码了。
+        system_actions.open_directory(PROJECT_PATH)
 
     def change_name(self):
         name = self.ui.lineEditEditorName.text().strip()
@@ -274,8 +289,8 @@ class MainWindow(QMainWindow):
         self.search_box.returnPressed.connect(self.handle_search)
 
         # set gui icon
-        if os.path.exists(ICON_PATH):
-            self.setWindowIcon(QIcon(ICON_PATH))
+        if os.path.exists(PROJECT_ICON_PATH):
+            self.setWindowIcon(QIcon(PROJECT_ICON_PATH))
         if os.path.exists(SAVE_ICON_PATH):
             self.ui.saveAction.setIcon(QIcon(SAVE_ICON_PATH))
         if os.path.exists(ADD_ICON_PATH):
@@ -439,6 +454,7 @@ class MainWindow(QMainWindow):
         self.action_open_file_with_editor = QAction()
         self.action_open_path_with_editor = QAction()
         self.action_locate_file = QAction('定位文件')
+        self.action_copy_items = QAction('复制项')
         self.action_open_selected_file = QAction('打开目标文件(同双击)')
         self.action_delete_items = QAction('删除')
 
@@ -451,6 +467,7 @@ class MainWindow(QMainWindow):
         self.action_open_path_with_editor.triggered.connect(
             lambda: self.open_with_editor(flag='path'))
         self.action_locate_file.triggered.connect(self.locate_files)
+        self.action_copy_items.triggered.connect(self.copy_items)
         self.action_open_selected_file.triggered.connect(
             self.open_selected_files)
         self.action_delete_items.triggered.connect(self.delete_items)
@@ -463,6 +480,8 @@ class MainWindow(QMainWindow):
         self.listwidget_menu.addAction(self.action_open_file_with_editor)
         self.listwidget_menu.addAction(self.action_open_path_with_editor)
         self.listwidget_menu.addSeparator()
+        self.listwidget_menu.addAction(self.action_copy_items)
+        self.listwidget_menu.addSeparator()
         self.listwidget_menu.addAction(self.action_delete_items)
         self.listwidget_menu.addAction(self.action_open_selected_file)
 
@@ -470,17 +489,24 @@ class MainWindow(QMainWindow):
         self.action_add_node = QAction('添加节点')
         self.action_add_sub_node = QAction('添加子节点')
         self.action_edit_node_name = QAction('修改节点名称')
+        self.action_ascend_items = QAction('升序')
+        self.action_descend_items = QAction('降序')
         self.action_delete_node = QAction('删除节点')
 
         self.action_add_node.triggered.connect(self.add_node)
         self.action_add_sub_node.triggered.connect(self.add_sub_node)
         self.action_edit_node_name.triggered.connect(self.edit_node_name)
+        self.action_ascend_items.triggered.connect(self.ascent_items)
+        self.action_descend_items.triggered.connect(self.descend_items)
         self.action_delete_node.triggered.connect(self.delete_node)
 
         self.treewidget_menu = QMenu(self.ui.treeWidget)
         self.treewidget_menu.addAction(self.action_add_node)
         self.treewidget_menu.addAction(self.action_add_sub_node)
         self.treewidget_menu.addAction(self.action_edit_node_name)
+        self.treewidget_menu.addSeparator()
+        self.treewidget_menu.addAction(self.action_ascend_items)
+        self.treewidget_menu.addAction(self.action_descend_items)
         self.treewidget_menu.addSeparator()
         self.treewidget_menu.addAction(self.action_delete_node)
 
@@ -600,7 +626,7 @@ class MainWindow(QMainWindow):
         for QUrl in urllist:
             path = QUrl.toLocalFile()
             row_count = self.ui.listWidget.count()
-            basename = os.path.basename(path)
+            basename = os.path.basename(Path(path))
             item_data = get_data_format('item')
             item_data['name'] = basename
             item_data['path'] = path
@@ -752,6 +778,9 @@ class MainWindow(QMainWindow):
             self.render_node(_node_id)
 
     def tree_item_click(self, item, column=0):
+        """
+        item: PySide6.QtWidgets.QTreeWidgetItem
+        """
         if item is None:
             return
         node_id = item.data(0, Qt.UserRole)
@@ -886,6 +915,30 @@ class MainWindow(QMainWindow):
             item_data = self.get_listwidget_item_data(item)
             path = item_data['path']
             self.handle_locate_file(path)
+
+    def copy_items(self):
+        items = self.get_listwidget_selected_items()
+        if not items:
+            return
+        # 不通过这种方式获取 node_id，则可以实现在搜索状态下
+        # 在多个不同的节点上同时复制产生多个项。
+        # node = self.ui.treeWidget.currentItem()
+        # node_id = node.data(0, Qt.UserRole)
+        self.ui.listWidget.clearSelection()
+        for _item in items:
+            item_data = self.get_listwidget_item_data(_item)
+            node_id = item_data['parent_id']
+            item_id = self.data.add_item(item_data, node_id)
+            item = QListWidgetItem(item_data['name'])
+            item.setData(Qt.UserRole, item_id)
+            self.ui.listWidget.addItem(item)
+            item.setSelected(True)
+        self.listwidget_left_click(item)
+        self.ui.listWidget.setCurrentItem(item)
+        self.ui.listWidget.setFocus(Qt.OtherFocusReason)
+        self.window().activateWindow()
+        self.set_has_edited()
+        self.update_statusbar_left()
 
     def clear_input_widgets(self):
         """Clear all input widgets.
@@ -1072,6 +1125,25 @@ class MainWindow(QMainWindow):
         self.set_has_edited(True)
         self.update_statusbar_left()
 
+    def sort_items(self, reverse=False):
+        node = self.ui.treeWidget.currentItem()
+        node_id = node.data(0, Qt.UserRole)
+        if node_id is None:
+            # 搜索模式下，不支持这功能。
+            return
+        items = self.data['nodes'][node_id]['items']
+        if len(items) == 0:
+            return
+        self.data.sort_items_within_node(node_id, reverse=reverse)
+        self.tree_item_click(node)
+        self.set_has_edited(True)
+
+    def ascent_items(self):
+        self.sort_items()
+
+    def descend_items(self):
+        self.sort_items(reverse=True)
+
     def open_with_editor(self, flag):
         items = self.get_listwidget_selected_items()
         if not items:
@@ -1117,7 +1189,7 @@ class MainWindow(QMainWindow):
                 target = os.path.dirname(path)
         else:
             raise TypeError
-        subprocess.Popen([editor_path, target])
+        system_actions.use_editor_open_path(editor_path, target)
 
     def set_has_edited(self, state=True):
         self.has_edited = state

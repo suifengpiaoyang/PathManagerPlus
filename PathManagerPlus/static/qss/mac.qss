@@ -1,0 +1,31 @@
+QMenuBar {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif;
+  font-size: 11pt;
+}
+
+QMenu {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif;
+  font-size: 12pt;
+}
+
+QTreeWidget {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif;
+  font-size: 13pt;
+}
+
+QStatusBar {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif;
+  font-size: 10pt;
+}
+
+QLabel,
+QPushButton,
+QListWidget,
+QCheckBox,
+QGroupBox,
+QLineEdit,
+QTextEdit,
+QPlainTextEdit {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif;
+  font-size: 14pt;
+}

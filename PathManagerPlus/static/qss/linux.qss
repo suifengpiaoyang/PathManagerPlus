@@ -1,0 +1,35 @@
+QMenuBar {
+  font-family: "Noto Sans CJK SC", "WenQuanYi Micro Hei", Arial, sans-serif;
+  font-size: 10pt;
+}
+
+QMenu {
+  font-family: "Noto Sans CJK SC", "WenQuanYi Micro Hei", Arial, sans-serif;
+  font-size: 9pt;
+}
+
+QTreeWidget {
+  font-family: "Noto Sans CJK SC", "WenQuanYi Micro Hei", Arial, sans-serif;
+  font-size: 12pt;
+}
+
+QStatusBar {
+  font-family: "Noto Sans CJK SC", "WenQuanYi Micro Hei", Arial, sans-serif;
+  font-size: 9pt;
+}
+
+QLabel,
+QPushButton,
+QListWidget,
+QCheckBox,
+QGroupBox,
+QLineEdit,
+QTextEdit,
+QPlainTextEdit {
+  font-family: "Noto Sans CJK SC", "WenQuanYi Micro Hei", Arial, sans-serif;
+  font-size: 13pt;
+}
+
+/*QLineEdit {
+  min-height: 35px;
+}*/

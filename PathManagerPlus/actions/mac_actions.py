@@ -19,29 +19,30 @@ def open_file(file):
     """
     path = os.path.dirname(file)
     os.chdir(path)
-    os.startfile(file)
+    subprocess.run(['open', file])
     os.chdir(PROJECT_PATH)
 
 
 def locate_file(file):
     """定位文件
-    Windows 平台对路径的要求很严格，需要用反斜杠，否则无法定位。
     """
     file = Path(file)
-    subprocess.run(['explorer', '/select,', str(file.resolve())])
+    subprocess.run(["open", "-R", file])
     return True, ''
 
 
 def open_directory(directory):
-    os.startfile(directory)
+    subprocess.run(['open', directory])
 
 
 def open_console(directory):
-    os.system(f'start /D "{directory}"')
+    subprocess.run(
+        ["open", "-a", "Terminal", directory]
+    )
 
 
 def open_ftp(ftp_url):
-    subprocess.Popen(['explorer.exe', ftp_url])
+    subprocess.run(["open", ftp_url])
 
 def use_editor_open_path(editor, path):
-    subprocess.Popen([editor, path])
+    subprocess.Popen(['open', '-a', editor, path])
