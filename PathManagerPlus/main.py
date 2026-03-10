@@ -123,6 +123,9 @@ class ConfigForm(QDialog):
         if os.path.exists(PROJECT_ICON_PATH):
             self.setWindowIcon(QIcon(PROJECT_ICON_PATH))
 
+        # load data path
+        self.ui.lineEditDataPath.setText(PROJECT_PATH)
+
         # load config file
         if os.path.exists(CONFIG_FILE):
             self.config = JsonDb.from_json(CONFIG_FILE)
@@ -146,11 +149,17 @@ class ConfigForm(QDialog):
         self.ui.pushButton.clicked.connect(self.choose_editor)
         self.ui.pushButtonConfirm.clicked.connect(self.confirm)
         self.ui.pushButtonCancel.clicked.connect(self.cancel)
+        self.ui.pushButtonOpenPath.clicked.connect(self.open_path)
         self.ui.maximizeWindow.toggled.connect(self.handle_maximize_window)
         self.ui.expandTree.toggled.connect(self.handle_expand_tree)
         self.ui.hideToolbar.toggled.connect(self.handle_hide_toolbar)
         self.ui.hideStatusBar.toggled.connect(self.handle_hide_statusbar)
         self.ui.lineEditEditorName.textChanged.connect(self.change_name)
+
+
+    def open_path(self):
+        # 不可能不存在 PROJECT_PATH，这里就不加判断代码了。
+        system_actions.open_directory(PROJECT_PATH)
 
     def change_name(self):
         name = self.ui.lineEditEditorName.text().strip()
