@@ -237,7 +237,7 @@ class DataStorage(dict):
         items = node['items']
         sorted_items = sorted(
             items,
-            key=lambda x: self['items'][x]['name'],
+            key=lambda x: self['items'][x]['name'].upper(),
             reverse=reverse
         )
         self['nodes'][node_id]['items'] = sorted_items
