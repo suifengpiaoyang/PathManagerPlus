@@ -4,6 +4,7 @@ import webbrowser
 import subprocess
 import platform
 from pathlib import Path
+from copy import deepcopy
 
 from PySide6.QtGui import (
     QIcon,
@@ -926,7 +927,7 @@ class MainWindow(QMainWindow):
         # node_id = node.data(0, Qt.UserRole)
         self.ui.listWidget.clearSelection()
         for _item in items:
-            item_data = self.get_listwidget_item_data(_item)
+            item_data = deepcopy(self.get_listwidget_item_data(_item))
             node_id = item_data['parent_id']
             item_id = self.data.add_item(item_data, node_id)
             item = QListWidgetItem(item_data['name'])
